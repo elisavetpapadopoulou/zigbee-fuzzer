@@ -1,0 +1,28 @@
+#!/bin/sh
+
+. /home/elizabeth/Coding/Thesis/ble-fuzzer/venv/bin/activate
+
+
+LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/home/elizabeth/Coding/Thesis/ble-fuzzer/venv/lib/python3.12/site-packages/"; export LD_LIBRARY_PATH
+LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpython3.12.so"; export LD_PRELOAD
+
+jep_dir=/home/elizabeth/Coding/Thesis/ble-fuzzer/venv/lib/python3.12/site-packages/jep
+
+if [ ! -d "$jep_dir" ]
+then
+    jep_dir=/home/elizabeth/Coding/Thesis/ble-fuzzer/venv/lib/python3.12/site-packages/jep-4.2.2-py3.12-linux-x86_64.egg/jep
+fi
+
+cp="$jep_dir/jep-4.2.2.jar"
+if test "x$CLASSPATH" != "x"; then
+    cp="$cp":"$CLASSPATH"
+fi
+
+jni_path=$jep_dir
+
+args=$*
+if test "x$args" = "x"; then
+  args="$jep_dir/console.py"
+fi
+
+exec java -classpath "$cp" -Djava.library.path="$jni_path" jep.Run $args

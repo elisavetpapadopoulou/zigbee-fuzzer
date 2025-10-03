@@ -1,0 +1,12 @@
+state-fuzzer-server
+-output
+experiments/results/zb_ns_basic
+-alphabet
+experiments/alphabets/ZigbeeAssoc.xml
+-equivalenceQueryBound
+5
+-logQueries
+-adapter
+/tmp/zt2.write
+-connect
+0x79bc000000010002
