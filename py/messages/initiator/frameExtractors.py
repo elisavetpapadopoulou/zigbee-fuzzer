@@ -5,45 +5,38 @@ from scapy.layers.zigbee import ZigbeeNWK, ZigbeeAppDataPayload, ZigbeeAppComman
 """
 Predicates that determine the type of frame our fuzzer received from the SUT.
 """
-def _is_mac_beacon(self, pkt):
-    return Dot15d4Beacon in pkt
+def _handlers(self, pkt):
+    if Dot15d4Beacon in pkt:
+        return "MAC_BEACON"
 
-def _is_mac_association_response(pkt):
-    return Dot15d4CmdAssocResp in pkt
+    elif Dot15d4CmdAssocResp in pkt:
+        return "MAC_ASSOCIATION_RESPONSE"
 
-def _is_aps_ack(self, pkt):
-    if ZigbeeAppDataPayload in pkt:
+    elif ZigbeeAppDataPayload in pkt:
         aps = pkt[ZigbeeAppDataPayload]
-        return getattr(aps, "aps_frametype", None) == 2
-    return False
+        if getattr(aps, "aps_frametype", None) == 2:
+            return "APS_ACK"
+        elif getattr(aps, "aps_frametype", None) == 0 :
+            if aps.profile == 0x0000 and int(aps.cluster) == 0x8002:
+                return "ZDO_NODE_DESCRIPTOR_RESPONSE"
 
-def _is_zdo_node_descriptor_response(self, pkt):
-    if ZigbeeAppDataPayload in pkt:
-        aps = pkt[ZigbeeAppDataPayload]
-        return aps.profile == 0x0000 and int(aps.cluster) == 0x8002
+    elif ZigbeeAppCommandPayload in pkt:
+        aps = pkt[ZigbeeAppCommandPayload]
+        aps_cmd = int(getattr(aps, "cmd_identifier", 0))
+        if aps_cmd == 0x05:
+            return "APS_TRANSPORT_KEY"
+        elif aps_cmd == 0x0B:
+            return "APS_UPDATE_DEVICE"
 
-def _is_aps_transport_key(self, pkt):
-    if ZigbeeAppDataPayload in pkt:
-        aps = pkt[ZigbeeAppDataPayload]
-        return int(getattr(aps, "cmd_identifier", 0)) == 0x05
-
-def _is_aps_update_device(self, pkt):
-    if ZigbeeAppDataPayload in pkt:
-        aps = pkt[ZigbeeAppDataPayload]
-        return int(getattr(aps, "cmd_identifier", 0)) == 0x0B
-
-def _is_nwk_route_request(self, pkt):
     if ZigbeeNWK in pkt and ZigbeeNWKCommandPayload in pkt:
-        cmd = pkt[ZigbeeNWKCommandPayload]
-        cmd_id = int(getattr(cmd, "cmd_identifier", -1))
+        nwk_cmd = pkt[ZigbeeNWKCommandPayload]
+        cmd_id = int(getattr(nwk_cmd, "cmd_identifier", -1))
         is_rreq = (cmd_id == 0x01)
-        return is_rreq
-def _is_nwk_route_reply(self, pkt):
-    if ZigbeeNWK in pkt and ZigbeeNWKCommandPayload in pkt:
-        cmd = pkt[ZigbeeNWKCommandPayload]
-        cmd_id = int(getattr(cmd, "cmd_identifier", -1))
         is_rrep = (cmd_id == 0x02)
-        return is_rrep
+        if is_rreq:
+            return "NWK_DISCOVER_ROUTE_REQUEST"
+        elif is_rrep:
+            return "NWK_DISCOVER_ROUTE_REPLY"
 
 """
 Handlers that will extract and symbolize the incoming frames

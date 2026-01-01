@@ -11,6 +11,9 @@ import com.github.protocolfuzzing.protocolstatefuzzer.components.learner.statist
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.SulBuilder;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.SulWrapper;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.SulWrapperStandard;
+import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulAdapterConfigStandard;
+import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulClientConfigStandard;
+import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.config.MapperConfigStandard;
 import com.github.protocolfuzzing.protocolstatefuzzer.statefuzzer.core.StateFuzzer;
 import com.github.protocolfuzzing.protocolstatefuzzer.statefuzzer.core.StateFuzzerBuilder;
 import com.github.protocolfuzzing.protocolstatefuzzer.statefuzzer.core.StateFuzzerComposerStandard;
@@ -47,7 +50,15 @@ public class MultiBuilder implements
 
     @Override
     public StateFuzzerClientConfig buildClientConfig() {
-        return new StateFuzzerClientConfigStandard(null, null, null, null);
+        return new StateFuzzerClientConfigStandard(
+            new LearnerConfigStandard(),
+            new SulClientConfigZigbee(
+                new MapperConfigStandard(),
+                new SulAdapterConfigStandard()
+            ),
+            new TestRunnerConfigStandard(),
+            new TimingProbeConfigStandard()
+        );
     }
 
     @Override

@@ -1,0 +1,15 @@
+digraph g {
+
+	s0 [shape="circle" label="s0"];
+	s0 -> s0 [label="APS_VERIFY_KEY / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="APS_REQUEST_KEY / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_ASSOCIATION_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_BEACON_REQUEST / MAC_BEACON"];
+
+__start0 [label="" shape="none" width="0" height="0"];
+__start0 -> s0;
+
+}

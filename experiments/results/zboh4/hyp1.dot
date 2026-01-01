@@ -1,0 +1,23 @@
+digraph g {
+
+	s0 [shape="circle" label="s0"];
+	s0 -> s0 [label="ZCL_DISCOVER_ATTRIBUTES / EMPTYRESPONSE"];
+	s0 -> s0 [label="ZCL_READ_ATTRIBUTES / EMPTYRESPONSE"];
+	s0 -> s0 [label="APS_VERIFY_KEY / EMPTYRESPONSE"];
+	s0 -> s0 [label="APS_REQUEST_KEY / EMPTYRESPONSE"];
+	s0 -> s0 [label="NWK_ROUTE_REPLY / EMPTYRESPONSE"];
+	s0 -> s0 [label="NWK_REJOIN_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="ZDO_NODE_DESCRIPTOR_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="ZDO_END_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_ORPHAN_NOTIFY / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_PAN_ID_CONFLICT_NOTIFY / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_GTS_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_ASSOCIATION_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_BEACON_REQUEST / MAC_BEACON"];
+
+__start0 [label="" shape="none" width="0" height="0"];
+__start0 -> s0;
+
+}

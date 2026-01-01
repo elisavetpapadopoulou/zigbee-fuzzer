@@ -1,0 +1,8 @@
+# Ignore all logs
+.logs/
+*.log
+
+# Ignore Java build artifacts
+target/
+*.jar
+*.class

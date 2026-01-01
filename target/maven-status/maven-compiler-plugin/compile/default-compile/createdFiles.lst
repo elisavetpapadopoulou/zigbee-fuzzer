@@ -1,6 +1,7 @@
 com/github/protocolfuzzing/zigbeefuzzer/symbols/AlphabetPojoXmlZigbee.class
 com/github/protocolfuzzing/zigbeefuzzer/symbols/OutputCheckerZigbee.class
 com/github/protocolfuzzing/zigbeefuzzer/symbols/OutputZigbee.class
+com/github/protocolfuzzing/zigbeefuzzer/SulClientConfigZigbee.class
 com/github/protocolfuzzing/zigbeefuzzer/symbols/AlphabetPojoXmlZigbee$InputPojoXmlZigbee.class
 com/github/protocolfuzzing/zigbeefuzzer/SulBuilderZigbee.class
 com/github/protocolfuzzing/zigbeefuzzer/SulServerConfigZigbee.class

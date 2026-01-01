@@ -1,0 +1,16 @@
+state-fuzzer-server
+-output
+experiments/results/zboh4
+-alphabet
+experiments/alphabets/association-nwkEntering.xml
+-equivalenceQueryBound
+5000
+-logQueries
+-adapter
+tcp://127.0.0.1:6000
+-connect
+EB:D8:6B:33:90:0B
+-ceReruns
+5
+-eqvThreads
+1

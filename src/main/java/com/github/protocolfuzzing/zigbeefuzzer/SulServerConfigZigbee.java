@@ -7,6 +7,9 @@ import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config
 
 public class SulServerConfigZigbee implements SulServerConfig {
     
+    @Parameter(names = "-port", description = "TCP port for the Zigbee driver server")
+    protected Integer port = 6000;
+
     @Parameter(names = "-adapter", required = true,
                description = "The serial port of the test adapter")
     protected String serialPort = null;
@@ -18,7 +21,7 @@ public class SulServerConfigZigbee implements SulServerConfig {
     @Parameter(names = "-connect", required = true,
                description = "The Zigbee MAC address of the target device")
     protected String targetMacAddr = null;
-
+    
 
     public String getAdapterSerialPort() {
         return serialPort;
@@ -43,6 +46,14 @@ public class SulServerConfigZigbee implements SulServerConfig {
         this.targetMacAddr = host;
     }
 
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
 
     @Override
     public void printRunDescriptionSelf(PrintWriter printWriter) {
@@ -52,4 +63,15 @@ public class SulServerConfigZigbee implements SulServerConfig {
         printWriter.println("Target addr: " + getTargetMacAddr());
     }
 
+    @Override
+    public SulServerConfigZigbee cloneWithThreadId(int threadId) {
+        SulServerConfigZigbee cloned = new SulServerConfigZigbee();
+        cloned.serialPort = this.serialPort;
+        cloned.mapper = this.mapper;
+        cloned.targetMacAddr = this.targetMacAddr;
+        if (this.port != null) {
+            cloned.port = this.port + threadId;
+        }
+        return cloned;
+    }
 }

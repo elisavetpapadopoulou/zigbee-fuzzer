@@ -1,0 +1,35 @@
+Non determinism when running test multiple times
+Test: MAC_DATA_REQUEST MAC_ASSOCIATION_REQUEST MAC_GTS_REQUEST MAC_DISASSOCIATION_NOTIFY ZDO_NODE_DESCRIPTOR_REQUEST APS_VERIFY_KEY ZDO_NODE_DESCRIPTOR_REQUEST ZDO_NODE_DESCRIPTOR_REQUEST MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST
+1 times outputs: EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE  EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE
+2 times outputs: EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE
+Performing probabilistic sanitization
+Most likely answer has likelihood 0.5714285714285714 after 7 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.625 after 8 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5555555555555556 after 9 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.6 after 10 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5454545454545454 after 11 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5 after 12 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.46153846153846156 after 13 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5 after 14 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.4666666666666667 after 15 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5 after 16 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5294117647058824 after 17 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5 after 18 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5263157894736842 after 19 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.55 after 20 runs
+Answer deemed to be in passable range, continuing execution
+Most likely answer has likelihood 0.5238095238095238 after 21 runs
+Answer deemed to be in passable range, continuing execution

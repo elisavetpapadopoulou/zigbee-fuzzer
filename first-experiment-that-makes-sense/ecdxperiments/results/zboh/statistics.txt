@@ -1,0 +1,79 @@
+=== RUN DESCRIPTION ===
+Alphabet: [APS_VERIFY_KEY, MAC_DATA_REQUEST, APS_REQUEST_KEY, MAC_DATA_REQUEST, MAC_DATA_REQUEST, MAC_ASSOCIATION_REQUEST, MAC_BEACON_REQUEST]
+
+StateFuzzerConfig Parameters
+Help: false
+Debug: false
+Quiet: false
+Output Directory: ecdxperiments/results/zboh
+Fuzzing Client: false
+
+LearnerConfig Parameters
+Alphabet: experiments/alphabets/ZigbeeAssoc.xml
+Learning Algorithm: TTT
+Equivalence Algorithms: [RANDOM_WP_METHOD]
+Max Depth: 1
+Min Length: 5
+Max Length: 15
+Max Equivalence Queries: 5000
+Runs Per Membership Query: 1
+Random Length: 5
+Membership Query Retries: 3
+Log Queries: true
+Prob Reset: 0.0
+Test File: null
+Seed: 0
+Cache Tests: false
+Ce Sanitization: true
+Skip Non Det Tests: false
+Ce Reruns: 3
+Probabilistic Sanitization: true
+Time Limit: null
+Test Limit: null
+Round Limit: null
+IOMode: true
+Probability of Choosing a New DataValue: 0.1
+Max Runs: 1
+Max Depth for Register Automata: 1
+Reset Runs: true
+Seed transitions: true
+Draw symbols uniformly: true
+
+SulServerConfigZigbee Parameters
+Zigbee Adapter: tcp://127.0.0.1:6000
+Mapper: null
+Target addr: EB:D8:6B:33:90:0B
+
+MapperConfig Parameters
+Mapper Connection Config: null
+Repeating Outputs: null
+Socket Closed as Timeout: false
+Disabled as Timeout: false
+Merge Repeating: false
+
+SulAdapterConfig Parameters
+Adapter Port: null
+Adapter Address: localhost
+
+=== STATISTICS ===
+Learning finished: false
+Reason: Index 1 out of bounds for length 1
+Size of the input alphabet: 7
+Number of states: 4
+Number of hypotheses: 2
+Number of inputs: 18420
+Number of tests: 2138
+Number of learning inputs: 289
+Number of learning tests: 84
+Number of inputs up to last hypothesis: 364
+Number of tests up to last hypothesis: 89
+Time (ms) to learn model: 187581968
+Counterexamples:
+CE 1:Query[ε|APS_REQUEST_KEY MAC_BEACON_REQUEST APS_VERIFY_KEY MAC_DATA_REQUEST APS_REQUEST_KEY MAC_DATA_REQUEST MAC_DATA_REQUEST MAC_ASSOCIATION_REQUEST MAC_BEACON_REQUEST APS_VERIFY_KEY APS_VERIFY_KEY MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST APS_REQUEST_KEY MAC_BEACON_REQUEST MAC_BEACON_REQUEST / EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE EMPTYRESPONSE MAC_BEACON MAC_BEACON]
+CE 2:Query[ε|MAC_DATA_REQUEST MAC_ASSOCIATION_REQUEST MAC_BEACON_REQUEST MAC_BEACON_REQUEST MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST / EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON MAC_BEACON EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY NWK_DISCOVER_ROUTE_REQUEST]
+Number of inputs when hypothesis was generated: [7, 364]
+Number of tests when hypothesis was generated: [7, 89]
+Time (ms) when hypothesis was generated: [84566, 3072564]
+Number of inputs when counterexample was found: [82, 436]
+Number of tests when counterexample was found: [12, 97]
+Time (ms) when counterexample was found: [764852, 3714597]

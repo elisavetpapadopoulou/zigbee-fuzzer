@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import threading
+import subprocess
 import socket, struct, time
 from typing import Optional, Callable
 
@@ -174,15 +175,31 @@ def _read_block(b: bytes, off: int):
     return b[k:k+n], k+n
 
 class zigbeeOnHostDriver:
-    def __init__(self, host="127.0.0.1", port=6000):
+    def __init__(self, host="127.0.0.1", port=6000, *,
+                 restart_cmd: Optional[list[str] | str] = None,
+                 restart_on_reset: bool = False,
+                 restart_on_disconnect: bool = False,
+                 restart_cooldown_s: float = 2.0):
         self.host = host
         self.port = port
+        self.channel = None
         self.sock:Optional[socket.socket]=None
         self.buf = bytearray()
         self._tx_queue = deque()
         self._rx_queue = deque()
         self._q_lock = threading.Lock()
+
+        self.restart_cmd = restart_cmd
+        self.restart_on_reset = restart_on_reset
+        self.restart_on_disconnect = restart_on_disconnect
+        self.restart_cooldown_s = restart_cooldown_s
+        self._restart_lock = threading.Lock()
+        self._last_restart_ts = 0.0
+
         self.connected = threading.Event()
+        self.listening = threading.Event()
+        self.ready = threading.Event()
+        self._stopping = threading.Event()
 
         def _on_host_tx(pdu: bytes):
             with self._q_lock:
@@ -191,13 +208,41 @@ class zigbeeOnHostDriver:
         if not hasattr(self, "on_host_tx") or self.on_host_tx == (lambda f: None):
             self.on_host_tx = _on_host_tx
 
+    def _start_stack(self):
+        self._run_restart_cmd("manual-start")
+
+    def _stop_stack(self):
+        subprocess.run(["pkill", "-f", "dist/dev/cli.js"], check=False)
+
+    def _restart_stack(self, reason: str = ""):
+        if not self.restart_cmd:
+            return
+        with self._restart_lock:
+            now = time.time()
+            if now - self._last_restart_ts < self.restart_cooldown_s:
+                return
+            self._last_restart_ts = now
+        threading.Thread(target=self._run_restart_cmd, args=(reason,), daemon=True).start()
+
+    def _run_restart_cmd(self, reason: str):
+        try:
+            cmd = self.restart_cmd
+            if cmd is None:
+                return
+            use_shell = isinstance(cmd, str)
+            print(f"[restart] reason='{reason}' running: {cmd}")
+            subprocess.run(cmd, check=True, shell=use_shell)
+            print(f"[restart] {reason}: done")
+        except Exception as e:
+            print(f"[restart] FAILED: {e}")
+
     def enable_raw(self):
         prop_id = 55
         value = b"\x01"
         frame = property_value_set(1, 0, prop_id, value)
         self._send(frame)
 
-    def wait_connect(self, timeout_s = 15.0):
+    def wait_connect(self, timeout_s = 7.0):
         return self.connected.wait(timeout_s)
 
     def pop_host_tx(self):
@@ -208,19 +253,20 @@ class zigbeeOnHostDriver:
         with self._q_lock:
             return self._tx_queue[0] if self._tx_queue else None
 
-    def _send(self, payload:bytes):
+    def _send(self, payload:bytes, beaconRequest:bool = False):
         if not self.sock:
             return
-        framed = hdlc_frame(payload)
-        print("_send():", ' '.join(f'{b:02x}' for b in payload))
-        self.sock.sendall(framed)
+
+        frame = hdlc_frame(payload)
+
+        self.sock.sendall(frame)
 
     def receive_raw(self):
         with self._q_lock:
             raw_with_meta = self._rx_queue.popleft() if self._rx_queue else None
             if raw_with_meta is None:
                 return None
-            return raw_with_meta[:-4] if len(raw_with_meta) >= 4 else raw_with_meta
+            return raw_with_meta[:-1]
 
     def push_injected_raw(self, mac_pdu_with_meta:bytes):
         with self._q_lock:
@@ -233,11 +279,14 @@ class zigbeeOnHostDriver:
                 + varint_encode(status)
         self._send(payload)
 
-    def inject_air_frame_with_meta(self, mac_pdu:bytes):
+    def inject_air_frame_with_meta(self, mac_pdu:bytes, beaconRequest: bool = False):
         # meta = struct.pack("<bBH", -40, 200, 0x0000)
-        # payload = varint_encode(len(mac_pdu)) + mac_pdu 
-        frame = property_value_is(0, PROP_STREAM_RAW, mac_pdu)
-        self._send(frame)
+        self.ready.wait(25.0)
+        channel = getattr(self, "channel", 25) & 0xFF
+        prefix = bytes([channel])
+        block = varint_encode(len(prefix) + len(mac_pdu)+1) + prefix + mac_pdu
+        frame = property_value_is(0, PROP_STREAM_RAW, block)
+        self._send(frame, beaconRequest)
 
     def _handle_get(self, tid:int, pid:int)->bytes:
         if pid ==  PROP_PROTOCOL_VERSION:
@@ -272,6 +321,9 @@ class zigbeeOnHostDriver:
             self._send(property_value_is(0, PROP_PROTOCOL_VERSION, bytes([4,3])))
             self._send(property_value_is(0, PROP_NCP_VERSION, enc_str("zoh-min")))
             self._send(property_value_is(0, PROP_INTERFACE_TYPE, enc_u32(0)))
+
+            # if self.restart_on_reset:
+            #     self._restart_stack("host-cmd-reset")
             return
         if cmd == CMD_PROP_VALUE_GET:
             pid, _ = varint_decode(payload, i)
@@ -283,12 +335,12 @@ class zigbeeOnHostDriver:
             # print(f"SET pid=0x{pid:04x}")
             if pid == PROP_STREAM_RAW:
                 frame, _ = _read_block(payload, j)
-                print(f"\n[COORDINATOR-TX]: Hex: {hexdump(frame)}")
+                # print(f"\n[COORDINATOR-TX]: Hex: {hexdump(frame)}")
                 # self.on_host_tx(val)
                 try:
                     from scapy.layers.dot15d4 import Dot15d4
                     pkt = Dot15d4(frame)
-                    print(f"  Decoded: {pkt.summary()}")
+                    # print(f"  Decoded: {pkt.summary()}")
                 except:
                     pass
                 # ACK the transmission
@@ -298,10 +350,11 @@ class zigbeeOnHostDriver:
                     self._rx_queue.append(frame+meta)
                 return
 
-            val = payload[j:]
 
-            # if pid in (PROP_PHY_ENABLED, PROP_PHY_CHAN):
-            #     self._send(property_value_is(tid, pid, val))
+            val = payload[j:]
+            if pid in (PROP_PHY_ENABLED, PROP_PHY_CHAN):
+                if val:
+                    self.channel = val[-1]
             self._send(property_value_is(tid, pid, val))
             return
 
@@ -317,46 +370,82 @@ class zigbeeOnHostDriver:
                 self._send(property_value_is(tid, pid, val))
             return
 
-    def serve_once(self, startup_delay = 5.0, accept_timeout = 0.5):
-        #print("Starting minimal RCP server...", flush=True)
-        server = socket.socket()
+    def wait_ready(self, timeout_s: float = 25.0) -> bool:
+        return self.ready.wait(timeout_s)
+
+    def stop(self):
+        self._stopping.set()
+        try:
+            if self.sock:
+                self.sock.shutdown(socket.SHUT_RDWR)
+        except: pass
+        try:
+            if self.server:
+                self.server.shutdown(socket.SHUT_RDWR)
+        except: pass
+
+    def serve_once(self):
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind((self.host, self.port))
         server.listen(1)
+        server.settimeout(1.0)
         self.server = server
-        #print(f"Listening on {self.host}:{self.port}", flush=True)
-        conn, peer = server.accept()
-        #print(f"Accepted from {peer}", flush=True)
-        self.sock = conn
-        self.sock.settimeout(0.1)
-        self.connected.set()
+        self.listening.set()
+        self._start_stack()
+
         try:
-            while True:
-                if self.sock is None:
-                    break
+            while not self._stopping.is_set():
                 try:
-                    data = self.sock.recv(4096)
+                    conn, peer = server.accept()
                 except socket.timeout:
                     continue
-                except OSError as e:
-                    #print("recv OSError, exiting server loop:", e)
-                    break
-                if not data:
-                    #print("Peer closed", flush=True)
+                except OSError:
                     break
 
-                #print(f"RECV {len(data)} bytes: {hexdump(data)}", flush=True)
-                self.buf.extend(data)
-                deframed = hdlc_deframe(self.buf)
-                #print(deframed)
-                for pl in deframed:
-                    self._dispatch(pl)
+                self.sock = conn
+                self.sock.settimeout(0.5)
+                self.connected.set()
+                try:
+                    while not self._stopping.is_set():
+                        try:
+                            data = self.sock.recv(4096)
+                        except socket.timeout:
+                            continue
+                        except OSError:
+                            break
+                        if not data:
+                            break
+
+                        self.ready.set()
+                        self.buf.extend(data)
+                        try:
+                            frames = hdlc_deframe(self.buf)
+                        except Exception as e:
+                            print("[deframe] error:", e)
+                            self.buf.clear()
+                            continue
+
+                        for pl in frames:
+                            self._dispatch(pl)
+                finally:
+                    try:
+                        conn.close()
+                    except:
+                        pass
+                    self.sock = None
+                    self.connected.clear()
+                    self.ready.clear()
         finally:
             try:
-                self.sock.close()
+                self.server.close()
             except:
                 pass
-            self.sock = None
+            self.server = None
+            self.listening.clear()
+
+            if self.restart_on_disconnect and not self._stopping.is_set():
+                self._restart_stack("tcp-disconnect")
 
     def close(self):
         try:
@@ -393,7 +482,12 @@ class zigbeeOnHostDriver:
 
 
 if __name__ == '__main__':
-    driver = zigbeeOnHostDriver()
+    driver = zigbeeOnHostDriver(
+            restart_cmd=["/bin/bash", "/home/elizabeth/Coding/Thesis/zigbee-fuzzer/py/restartStack.sh"],
+            restart_on_reset=True,
+            restart_on_disconnect=True,
+            restart_cooldown_s=2.0
+            )
 
     def host_tx_handler(b):
         time.sleep(0.02)
