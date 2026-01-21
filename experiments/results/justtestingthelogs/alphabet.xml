@@ -1,0 +1,13 @@
+<alphabet>
+    <InputZigbee name="APS_VERIFY_KEY"/>
+    <InputZigbee name="APS_REQUEST_KEY"/>
+    <InputZigbee name="NWK_REJOIN_REQUEST_SECURE"/>
+    <InputZigbee name="NWK_REJOIN_REQUEST_UNSECURED"/>
+    <InputZigbee name="ZDO_NODE_DESCRIPTOR_REQUEST"/>
+    <InputZigbee name="ZDO_DEVICE_ANNOUNCE"/>
+    <InputZigbee name="MAC_DISASSOCIATION_NOTIFY"/>
+    <InputZigbee name="MAC_DATA_REQUEST"/>
+    <InputZigbee name="MAC_ASSOCIATION_REQUEST"/>
+    <InputZigbee name="MAC_BEACON_REQUEST"/>
+</alphabet>
+

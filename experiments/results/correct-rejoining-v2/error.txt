@@ -1,0 +1,439 @@
+[restart] reason='manual-start' running: ['/bin/bash', '/home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh']
+09:24:28 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_BEACON_REQUEST
+09:24:28 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command BeaconReq ( ??:79:bc:00:00:00:01:00:02 -> 0xffff:0xffff )
+TX ---> 43c801ffffffff020001000000bc7907ee3f
+RX ---> Dot15d4FCS / 802.15.4 Beacon ( 0x6963:0x0 ) assocPermit(True) panCoord(True) / ZigBeeBeacon
+[restart] started, pid=192408
+[restart] tail -f /home/eliza/Coding/Thesis/zigbee-fuzzer/.logs/dev-cli.log
+[restart] manual-start: done
+Output packet summary: Dot15d4FCS / 802.15.4 Beacon ( 0x6963:0x0 ) assocPermit(True) panCoord(True) / ZigBeeBeacon
+###[ 802.15.4 - FCS ]###
+  fcf_reserved_1= 0
+  fcf_panidcompress= False
+  fcf_ackreq= False
+  fcf_pending= False
+  fcf_security= False
+  fcf_frametype= Beacon
+  fcf_srcaddrmode= Short
+  fcf_framever= 0
+  fcf_destaddrmode= None
+  fcf_reserved_2= 0
+  seqnum    = 7
+  fcs       = 0xd812
+###[ 802.15.4 Beacon ]###
+     src_panid = 0x6963
+     src_addr  = 0x0
+     sf_sforder= 15
+     sf_beaconorder= 15
+     sf_assocpermit= True
+     sf_pancoord= True
+     sf_reserved= 0
+     sf_battlifeextend= False
+     sf_finalcapslot= 15
+     gts_spec_permit= False
+     gts_spec_reserved= 0
+     gts_spec_desccount= 0
+     pa_reserved_1= 0
+     pa_num_long= 0
+     pa_reserved_2= 0
+     pa_num_short= 0
+     pa_short_addresses= []
+     pa_long_addresses= []
+###[ ZigBee Beacon Payload ]###
+        proto_id  = 0
+        nwkc_protocol_version= 2
+        stack_profile= 2
+        end_device_capacity= 1
+        device_depth= 0
+        router_capacity= 1
+        reserved  = 0
+        extended_pan_id= dd:44:dd:33:dd:22:dd:11
+        tx_offset = 16777215
+        update_id = 0
+
+Entries: [(<Dot15d4FCS  fcf_reserved_1=0 fcf_panidcompress=False fcf_ackreq=False fcf_pending=False fcf_security=False fcf_frametype=Beacon fcf_srcaddrmode=Short fcf_framever=0 fcf_destaddrmode=None fcf_reserved_2=0 seqnum=7 fcs=0xd812 |<Dot15d4Beacon  src_panid=0x6963 src_addr=0x0 sf_sforder=15 sf_beaconorder=15 sf_assocpermit=True sf_pancoord=True sf_reserved=0 sf_battlifeextend=False sf_finalcapslot=15 gts_spec_permit=False gts_spec_reserved=0 gts_spec_desccount=0 pa_reserved_1=0 pa_num_long=0 pa_reserved_2=0 pa_num_short=0 |<ZigBeeBeacon  proto_id=0 nwkc_protocol_version=2 stack_profile=2 end_device_capacity=1 device_depth=0 router_capacity=1 reserved=0 extended_pan_id=dd:44:dd:33:dd:22:dd:11 tx_offset=16777215 update_id=0 |>>>, 'MAC_BEACON')]
+Handler name: _h_mac_beacon
+09:24:35 [main] DEBUG : LoggingWrapper - Propagating output symbol MAC_BEACON
+09:24:35 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:24:35 [main] DEBUG : LoggingWrapper - Propagating input symbol NWK_REJOIN_REQUEST_UNSECURED
+09:24:35 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Data ( 0x0:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 ) / ZigbeeNWK / ZigbeeNWKCommandPayload
+TX ---> 61c80863690000020001000000bc790910000000000101020001000000bc7906800d53
+09:24:42 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:24:42 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:24:42 [main] DEBUG : LoggingWrapper - Propagating input symbol NWK_REJOIN_REQUEST_SECURE
+09:24:42 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Data ( 0x0:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 ) / ZigbeeNWK / ZigbeeNWKCommandPayload
+TX ---> 61c80863690000020001000000bc790910000000000101020001000000bc7906c00911
+09:24:49 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:24:49 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:24:49 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_DATA_REQUEST
+09:24:49 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command DataReq ( ??:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 )
+TX ---> 63c80863690000020001000000bc7904ad3c
+TX ---> Dot15d4FCS / 802.15.4 Command DataReq ( ??:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 )
+TX ---> 63c80963690000020001000000bc7904ad3c
+09:25:05 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:25:05 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:25:05 [main] DEBUG : SulZigbee - SulZigbee: post
+09:25:05 [main] DEBUG : SulZigbee - SulZigbee: pre
+[restart] reason='manual-start' running: ['/bin/bash', '/home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh']
+09:25:05 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_BEACON_REQUEST
+09:25:05 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command BeaconReq ( ??:79:bc:00:00:00:01:00:02 -> 0xffff:0xffff )
+TX ---> 43c801ffffffff020001000000bc7907ee3f
+RX ---> Dot15d4FCS / 802.15.4 Beacon ( 0x6963:0x0 ) assocPermit(True) panCoord(True) / ZigBeeBeacon
+[restart] started, pid=192454
+[restart] tail -f /home/eliza/Coding/Thesis/zigbee-fuzzer/.logs/dev-cli.log
+[restart] manual-start: done
+Output packet summary: Dot15d4FCS / 802.15.4 Beacon ( 0x6963:0x0 ) assocPermit(True) panCoord(True) / ZigBeeBeacon
+###[ 802.15.4 - FCS ]###
+  fcf_reserved_1= 0
+  fcf_panidcompress= False
+  fcf_ackreq= False
+  fcf_pending= False
+  fcf_security= False
+  fcf_frametype= Beacon
+  fcf_srcaddrmode= Short
+  fcf_framever= 0
+  fcf_destaddrmode= None
+  fcf_reserved_2= 0
+  seqnum    = 7
+  fcs       = 0xd812
+###[ 802.15.4 Beacon ]###
+     src_panid = 0x6963
+     src_addr  = 0x0
+     sf_sforder= 15
+     sf_beaconorder= 15
+     sf_assocpermit= True
+     sf_pancoord= True
+     sf_reserved= 0
+     sf_battlifeextend= False
+     sf_finalcapslot= 15
+     gts_spec_permit= False
+     gts_spec_reserved= 0
+     gts_spec_desccount= 0
+     pa_reserved_1= 0
+     pa_num_long= 0
+     pa_reserved_2= 0
+     pa_num_short= 0
+     pa_short_addresses= []
+     pa_long_addresses= []
+###[ ZigBee Beacon Payload ]###
+        proto_id  = 0
+        nwkc_protocol_version= 2
+        stack_profile= 2
+        end_device_capacity= 1
+        device_depth= 0
+        router_capacity= 1
+        reserved  = 0
+        extended_pan_id= dd:44:dd:33:dd:22:dd:11
+        tx_offset = 16777215
+        update_id = 0
+
+Entries: [(<Dot15d4FCS  fcf_reserved_1=0 fcf_panidcompress=False fcf_ackreq=False fcf_pending=False fcf_security=False fcf_frametype=Beacon fcf_srcaddrmode=Short fcf_framever=0 fcf_destaddrmode=None fcf_reserved_2=0 seqnum=7 fcs=0xd812 |<Dot15d4Beacon  src_panid=0x6963 src_addr=0x0 sf_sforder=15 sf_beaconorder=15 sf_assocpermit=True sf_pancoord=True sf_reserved=0 sf_battlifeextend=False sf_finalcapslot=15 gts_spec_permit=False gts_spec_reserved=0 gts_spec_desccount=0 pa_reserved_1=0 pa_num_long=0 pa_reserved_2=0 pa_num_short=0 |<ZigBeeBeacon  proto_id=0 nwkc_protocol_version=2 stack_profile=2 end_device_capacity=1 device_depth=0 router_capacity=1 reserved=0 extended_pan_id=dd:44:dd:33:dd:22:dd:11 tx_offset=16777215 update_id=0 |>>>, 'MAC_BEACON')]
+Handler name: _h_mac_beacon
+09:25:12 [main] DEBUG : LoggingWrapper - Propagating output symbol MAC_BEACON
+09:25:12 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:25:12 [main] DEBUG : LoggingWrapper - Propagating input symbol NWK_REJOIN_REQUEST_SECURE
+09:25:12 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Data ( 0x0:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 ) / ZigbeeNWK / ZigbeeNWKCommandPayload
+TX ---> 61c80863690000020001000000bc790910000000000101020001000000bc7906c00911
+09:25:19 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:25:19 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:25:19 [main] DEBUG : LoggingWrapper - Propagating input symbol NWK_REJOIN_REQUEST_SECURE
+09:25:19 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Data ( 0x0:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 ) / ZigbeeNWK / ZigbeeNWKCommandPayload
+TX ---> 61c80863690000020001000000bc790910000000000101020001000000bc7906c00911
+09:25:26 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:25:26 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:25:26 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_DATA_REQUEST
+09:25:26 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command DataReq ( ??:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 )
+TX ---> 63c80863690000020001000000bc7904ad3c
+TX ---> Dot15d4FCS / 802.15.4 Command DataReq ( ??:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 )
+TX ---> 63c80963690000020001000000bc7904ad3c
+09:25:42 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:25:42 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:25:42 [main] DEBUG : SulZigbee - SulZigbee: post
+09:25:42 [main] DEBUG : SulZigbee - SulZigbee: pre
+[restart] reason='manual-start' running: ['/bin/bash', '/home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh']
+09:25:42 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_BEACON_REQUEST
+09:25:42 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command BeaconReq ( ??:79:bc:00:00:00:01:00:02 -> 0xffff:0xffff )
+TX ---> 43c801ffffffff020001000000bc7907ee3f
+RX ---> Dot15d4FCS / 802.15.4 Beacon ( 0x6963:0x0 ) assocPermit(True) panCoord(True) / ZigBeeBeacon
+[restart] started, pid=192496
+[restart] tail -f /home/eliza/Coding/Thesis/zigbee-fuzzer/.logs/dev-cli.log
+[restart] manual-start: done
+Output packet summary: Dot15d4FCS / 802.15.4 Beacon ( 0x6963:0x0 ) assocPermit(True) panCoord(True) / ZigBeeBeacon
+###[ 802.15.4 - FCS ]###
+  fcf_reserved_1= 0
+  fcf_panidcompress= False
+  fcf_ackreq= False
+  fcf_pending= False
+  fcf_security= False
+  fcf_frametype= Beacon
+  fcf_srcaddrmode= Short
+  fcf_framever= 0
+  fcf_destaddrmode= None
+  fcf_reserved_2= 0
+  seqnum    = 7
+  fcs       = 0xd812
+###[ 802.15.4 Beacon ]###
+     src_panid = 0x6963
+     src_addr  = 0x0
+     sf_sforder= 15
+     sf_beaconorder= 15
+     sf_assocpermit= True
+     sf_pancoord= True
+     sf_reserved= 0
+     sf_battlifeextend= False
+     sf_finalcapslot= 15
+     gts_spec_permit= False
+     gts_spec_reserved= 0
+     gts_spec_desccount= 0
+     pa_reserved_1= 0
+     pa_num_long= 0
+     pa_reserved_2= 0
+     pa_num_short= 0
+     pa_short_addresses= []
+     pa_long_addresses= []
+###[ ZigBee Beacon Payload ]###
+        proto_id  = 0
+        nwkc_protocol_version= 2
+        stack_profile= 2
+        end_device_capacity= 1
+        device_depth= 0
+        router_capacity= 1
+        reserved  = 0
+        extended_pan_id= dd:44:dd:33:dd:22:dd:11
+        tx_offset = 16777215
+        update_id = 0
+
+Entries: [(<Dot15d4FCS  fcf_reserved_1=0 fcf_panidcompress=False fcf_ackreq=False fcf_pending=False fcf_security=False fcf_frametype=Beacon fcf_srcaddrmode=Short fcf_framever=0 fcf_destaddrmode=None fcf_reserved_2=0 seqnum=7 fcs=0xd812 |<Dot15d4Beacon  src_panid=0x6963 src_addr=0x0 sf_sforder=15 sf_beaconorder=15 sf_assocpermit=True sf_pancoord=True sf_reserved=0 sf_battlifeextend=False sf_finalcapslot=15 gts_spec_permit=False gts_spec_reserved=0 gts_spec_desccount=0 pa_reserved_1=0 pa_num_long=0 pa_reserved_2=0 pa_num_short=0 |<ZigBeeBeacon  proto_id=0 nwkc_protocol_version=2 stack_profile=2 end_device_capacity=1 device_depth=0 router_capacity=1 reserved=0 extended_pan_id=dd:44:dd:33:dd:22:dd:11 tx_offset=16777215 update_id=0 |>>>, 'MAC_BEACON')]
+Handler name: _h_mac_beacon
+09:25:49 [main] DEBUG : LoggingWrapper - Propagating output symbol MAC_BEACON
+09:25:49 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:25:49 [main] DEBUG : LoggingWrapper - Propagating input symbol APS_REQUEST_KEY
+09:25:49 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Data ( 0x0:0x0 -> 0x6963:0x0 ) / ZigbeeNWK / Raw
+TX ---> 6188086369000000000812000000001e01020001000000bc7921012001000001020001000000bc7900e089dc9476907f
+09:25:56 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:25:56 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:25:56 [main] DEBUG : LoggingWrapper - Propagating input symbol NWK_REJOIN_REQUEST_SECURE
+09:25:56 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Data ( 0x0:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 ) / ZigbeeNWK / ZigbeeNWKCommandPayload
+TX ---> 61c80863690000020001000000bc790910000000000101020001000000bc7906c00911
+09:26:03 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:26:03 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:26:03 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_DATA_REQUEST
+09:26:03 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command DataReq ( ??:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 )
+TX ---> 63c80863690000020001000000bc7904ad3c
+TX ---> Dot15d4FCS / 802.15.4 Command DataReq ( ??:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 )
+TX ---> 63c80963690000020001000000bc7904ad3c
+09:26:19 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:26:19 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:26:19 [main] DEBUG : SulZigbee - SulZigbee: post
+09:26:19 [main] DEBUG : SulZigbee - SulZigbee: pre
+[restart] reason='manual-start' running: ['/bin/bash', '/home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh']
+09:26:19 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_BEACON_REQUEST
+09:26:19 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command BeaconReq ( ??:79:bc:00:00:00:01:00:02 -> 0xffff:0xffff )
+TX ---> 43c801ffffffff020001000000bc7907ee3f
+RX ---> Dot15d4FCS / 802.15.4 Beacon ( 0x6963:0x0 ) assocPermit(True) panCoord(True) / ZigBeeBeacon
+[restart] started, pid=192539
+[restart] tail -f /home/eliza/Coding/Thesis/zigbee-fuzzer/.logs/dev-cli.log
+[restart] manual-start: done
+Output packet summary: Dot15d4FCS / 802.15.4 Beacon ( 0x6963:0x0 ) assocPermit(True) panCoord(True) / ZigBeeBeacon
+###[ 802.15.4 - FCS ]###
+  fcf_reserved_1= 0
+  fcf_panidcompress= False
+  fcf_ackreq= False
+  fcf_pending= False
+  fcf_security= False
+  fcf_frametype= Beacon
+  fcf_srcaddrmode= Short
+  fcf_framever= 0
+  fcf_destaddrmode= None
+  fcf_reserved_2= 0
+  seqnum    = 6
+  fcs       = 0xd856
+###[ 802.15.4 Beacon ]###
+     src_panid = 0x6963
+     src_addr  = 0x0
+     sf_sforder= 15
+     sf_beaconorder= 15
+     sf_assocpermit= True
+     sf_pancoord= True
+     sf_reserved= 0
+     sf_battlifeextend= False
+     sf_finalcapslot= 15
+     gts_spec_permit= False
+     gts_spec_reserved= 0
+     gts_spec_desccount= 0
+     pa_reserved_1= 0
+     pa_num_long= 0
+     pa_reserved_2= 0
+     pa_num_short= 0
+     pa_short_addresses= []
+     pa_long_addresses= []
+###[ ZigBee Beacon Payload ]###
+        proto_id  = 0
+        nwkc_protocol_version= 2
+        stack_profile= 2
+        end_device_capacity= 1
+        device_depth= 0
+        router_capacity= 1
+        reserved  = 0
+        extended_pan_id= dd:44:dd:33:dd:22:dd:11
+        tx_offset = 16777215
+        update_id = 0
+
+Entries: [(<Dot15d4FCS  fcf_reserved_1=0 fcf_panidcompress=False fcf_ackreq=False fcf_pending=False fcf_security=False fcf_frametype=Beacon fcf_srcaddrmode=Short fcf_framever=0 fcf_destaddrmode=None fcf_reserved_2=0 seqnum=6 fcs=0xd856 |<Dot15d4Beacon  src_panid=0x6963 src_addr=0x0 sf_sforder=15 sf_beaconorder=15 sf_assocpermit=True sf_pancoord=True sf_reserved=0 sf_battlifeextend=False sf_finalcapslot=15 gts_spec_permit=False gts_spec_reserved=0 gts_spec_desccount=0 pa_reserved_1=0 pa_num_long=0 pa_reserved_2=0 pa_num_short=0 |<ZigBeeBeacon  proto_id=0 nwkc_protocol_version=2 stack_profile=2 end_device_capacity=1 device_depth=0 router_capacity=1 reserved=0 extended_pan_id=dd:44:dd:33:dd:22:dd:11 tx_offset=16777215 update_id=0 |>>>, 'MAC_BEACON')]
+Handler name: _h_mac_beacon
+09:26:26 [main] DEBUG : LoggingWrapper - Propagating output symbol MAC_BEACON
+09:26:26 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:26:26 [main] DEBUG : LoggingWrapper - Propagating input symbol APS_VERIFY_KEY
+09:26:26 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Data ( 0x0:0x0 -> 0x6963:0x0 ) / ZigbeeNWK / Raw
+TX ---> 6188076369000000000810000000001e01020001000000bc7921012001000001020001000000bc7907e0a13b1167ef23e2f90fa5e5901e4fa81fd5123f9661094880a3d7aa30e47a
+09:26:33 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:26:33 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:26:33 [main] DEBUG : LoggingWrapper - Propagating input symbol NWK_REJOIN_REQUEST_SECURE
+09:26:33 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Data ( 0x0:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 ) / ZigbeeNWK / ZigbeeNWKCommandPayload
+TX ---> 61c80763690000020001000000bc790910000000000101020001000000bc7906c06143
+09:26:40 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:26:40 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:26:40 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_DATA_REQUEST
+09:26:40 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command DataReq ( ??:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 )
+TX ---> 63c80763690000020001000000bc790449a3
+TX ---> Dot15d4FCS / 802.15.4 Command DataReq ( ??:79:bc:00:00:00:01:00:02 -> 0x6963:0x0 )
+TX ---> 63c80863690000020001000000bc790449a3
+09:26:56 [main] DEBUG : LoggingWrapper - Propagating output symbol EMPTYRESPONSE
+09:26:56 [main] DEBUG : LoggingWrapper - ----------------------------------------
+09:26:56 [main] DEBUG : SulZigbee - SulZigbee: post
+09:26:56 [main] DEBUG : SulZigbee - SulZigbee: pre
+[restart] reason='manual-start' running: ['/bin/bash', '/home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh']
+09:26:56 [main] DEBUG : LoggingWrapper - Propagating input symbol MAC_BEACON_REQUEST
+09:26:56 [main] DEBUG : SulZigbee - SulZigbee: step
+TX ---> Dot15d4FCS / 802.15.4 Command BeaconReq ( ??:79:bc:00:00:00:01:00:02 -> 0xffff:0xffff )
+TX ---> 43c801ffffffff020001000000bc7907ee3f
+Traceback (most recent call last):
+  File "/home/eliza/Coding/Thesis/zigbee-fuzzer/py/ZigbeeSUL.py", line 70, in step
+    output_symbol = self.step_internal(input_symbol)
+  File "/home/eliza/Coding/Thesis/zigbee-fuzzer/py/ZigbeeSUL.py", line 92, in step_internal
+    self.send(pkt, input_symbol)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/home/eliza/Coding/Thesis/zigbee-fuzzer/py/ZigbeeSUL.py", line 120, in send
+    self.driver.inject_air_frame_with_meta(bytes(pkt))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/eliza/Coding/Thesis/zigbee-fuzzer/py/zigbeeOnHostDriver.py", line 289, in inject_air_frame_with_meta
+    self._send(frame, beaconRequest)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eliza/Coding/Thesis/zigbee-fuzzer/py/zigbeeOnHostDriver.py", line 262, in _send
+    self.sock.sendall(frame)
+    ~~~~~~~~~~~~~~~~~^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+09:26:57 [main] DEBUG : SulZigbee - SulZigbee: post
+09:26:57 [main] ERROR : StateFuzzerStandard - Exception generated during learning
+java.lang.RuntimeException: java.util.concurrent.ExecutionException: jep.JepException: <class 'BrokenPipeError'>: 32
+09:26:57 [main] INFO  : StateFuzzerStandard - Finished Experiment
+09:26:57 [main] INFO  : StateFuzzerStandard - Number of refinement rounds: 8
+09:26:57 [main] INFO  : StateFuzzerStandard - Results stored in experiments/results/correct-rejoining-v2
+09:26:57 [main] INFO  : StateFuzzerStandard - === RUN DESCRIPTION ===
+Alphabet: [APS_VERIFY_KEY, APS_REQUEST_KEY, NWK_REJOIN_REQUEST_SECURE, NWK_REJOIN_REQUEST_UNSECURED, ZDO_NODE_DESCRIPTOR_REQUEST, ZDO_DEVICE_ANNOUNCE, MAC_DISASSOCIATION_NOTIFY, MAC_DATA_REQUEST, MAC_ASSOCIATION_REQUEST, MAC_BEACON_REQUEST]
+
+StateFuzzerConfig Parameters
+Help: false
+Debug: false
+Quiet: false
+Output Directory: experiments/results/correct-rejoining-v2
+Fuzzing Client: false
+
+LearnerConfig Parameters
+Alphabet: experiments/alphabets/association-nwkEntering.xml
+Learning Algorithm: TTT
+Equivalence Algorithms: [RANDOM_WP_METHOD]
+Max Depth: 1
+Min Length: 5
+Max Length: 15
+Max Equivalence Queries: 5000
+Runs Per Membership Query: 1
+Random Length: 5
+Membership Query Retries: 3
+Log Queries: true
+Prob Reset: 0.0
+Test File: null
+Seed: 0
+Cache Tests: false
+Ce Sanitization: true
+Skip Non Det Tests: false
+Ce Reruns: 3
+Probabilistic Sanitization: true
+Time Limit: null
+Test Limit: null
+Round Limit: null
+IOMode: true
+Probability of Choosing a New DataValue: 0.1
+Max Runs: 1
+Max Depth for Register Automata: 1
+Reset Runs: true
+Seed transitions: true
+Draw symbols uniformly: true
+
+SulServerConfigZigbee Parameters
+Zigbee Adapter: localhost:6000
+Mapper: null
+Target addr: EB:D8:6B:33:90:0B
+
+MapperConfig Parameters
+Mapper Connection Config: null
+Repeating Outputs: null
+Socket Closed as Timeout: false
+Disabled as Timeout: false
+Merge Repeating: false
+
+SulAdapterConfig Parameters
+Adapter Port: null
+Adapter Address: localhost
+
+=== STATISTICS ===
+Learning finished: false
+Reason: java.util.concurrent.ExecutionException: jep.JepException: <class 'BrokenPipeError'>: 32
+Size of the input alphabet: 10
+Number of states: 16
+Number of hypotheses: 8
+Number of inputs: 8315
+Number of tests: 921
+Number of learning inputs: 5349
+Number of learning tests: 713
+Number of inputs up to last hypothesis: 7907
+Number of tests up to last hypothesis: 865
+Time (ms) to learn model: 64528838
+Counterexamples:
+CE 1:Query[ε|NWK_REJOIN_REQUEST_SECURE NWK_REJOIN_REQUEST_UNSECURED ZDO_DEVICE_ANNOUNCE ZDO_DEVICE_ANNOUNCE MAC_DATA_REQUEST NWK_REJOIN_REQUEST_SECURE MAC_ASSOCIATION_REQUEST ZDO_DEVICE_ANNOUNCE MAC_ASSOCIATION_REQUEST MAC_DISASSOCIATION_NOTIFY MAC_BEACON_REQUEST MAC_DISASSOCIATION_NOTIFY MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST ZDO_DEVICE_ANNOUNCE MAC_DATA_REQUEST / EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE EMPTYRESPONSE EMPTYRESPONSE]
+CE 2:Query[ε|ZDO_DEVICE_ANNOUNCE MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST APS_REQUEST_KEY MAC_DATA_REQUEST MAC_DISASSOCIATION_NOTIFY NWK_REJOIN_REQUEST_UNSECURED APS_REQUEST_KEY NWK_REJOIN_REQUEST_UNSECURED APS_VERIFY_KEY MAC_DATA_REQUEST APS_REQUEST_KEY MAC_DISASSOCIATION_NOTIFY APS_REQUEST_KEY MAC_BEACON_REQUEST ZDO_DEVICE_ANNOUNCE APS_REQUEST_KEY APS_VERIFY_KEY ZDO_NODE_DESCRIPTOR_REQUEST NWK_REJOIN_REQUEST_UNSECURED MAC_BEACON_REQUEST ZDO_NODE_DESCRIPTOR_REQUEST MAC_DISASSOCIATION_NOTIFY MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST / EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE APS_CMD_TRANSPORT_TC_LINK_KEY EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE]
+CE 3:Query[ε|NWK_REJOIN_REQUEST_SECURE MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST NWK_REJOIN_REQUEST_UNSECURED APS_REQUEST_KEY NWK_REJOIN_REQUEST_SECURE APS_VERIFY_KEY MAC_BEACON_REQUEST ZDO_DEVICE_ANNOUNCE NWK_REJOIN_REQUEST_SECURE MAC_BEACON_REQUEST NWK_REJOIN_REQUEST_UNSECURED NWK_REJOIN_REQUEST_UNSECURED APS_VERIFY_KEY MAC_DATA_REQUEST / EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE APS_CONFIRM_KEY]
+CE 4:Query[ε|APS_VERIFY_KEY MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST ZDO_DEVICE_ANNOUNCE NWK_REJOIN_REQUEST_SECURE APS_REQUEST_KEY NWK_REJOIN_REQUEST_UNSECURED APS_VERIFY_KEY NWK_REJOIN_REQUEST_UNSECURED APS_VERIFY_KEY NWK_REJOIN_REQUEST_UNSECURED MAC_DISASSOCIATION_NOTIFY ZDO_NODE_DESCRIPTOR_REQUEST APS_VERIFY_KEY MAC_DATA_REQUEST / EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE]
+CE 5:Query[ε|NWK_REJOIN_REQUEST_SECURE MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST ZDO_DEVICE_ANNOUNCE NWK_REJOIN_REQUEST_UNSECURED APS_REQUEST_KEY MAC_DISASSOCIATION_NOTIFY MAC_BEACON_REQUEST APS_REQUEST_KEY MAC_ASSOCIATION_REQUEST APS_VERIFY_KEY ZDO_NODE_DESCRIPTOR_REQUEST APS_VERIFY_KEY ZDO_NODE_DESCRIPTOR_REQUEST ZDO_DEVICE_ANNOUNCE APS_REQUEST_KEY NWK_REJOIN_REQUEST_UNSECURED NWK_REJOIN_REQUEST_SECURE NWK_REJOIN_REQUEST_UNSECURED NWK_REJOIN_REQUEST_SECURE MAC_DISASSOCIATION_NOTIFY MAC_DATA_REQUEST ZDO_DEVICE_ANNOUNCE MAC_DISASSOCIATION_NOTIFY ZDO_DEVICE_ANNOUNCE ZDO_NODE_DESCRIPTOR_REQUEST ZDO_NODE_DESCRIPTOR_REQUEST MAC_DISASSOCIATION_NOTIFY MAC_DISASSOCIATION_NOTIFY ZDO_NODE_DESCRIPTOR_REQUEST MAC_DATA_REQUEST NWK_REJOIN_REQUEST_SECURE NWK_REJOIN_REQUEST_UNSECURED MAC_DATA_REQUEST MAC_DATA_REQUEST / EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE NWK_REJOIN_RESPONSE_FAILURE EMPTYRESPONSE]
+CE 6:Query[ε|MAC_DISASSOCIATION_NOTIFY MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST MAC_DISASSOCIATION_NOTIFY MAC_BEACON_REQUEST MAC_DISASSOCIATION_NOTIFY APS_REQUEST_KEY APS_VERIFY_KEY ZDO_NODE_DESCRIPTOR_REQUEST APS_REQUEST_KEY MAC_DISASSOCIATION_NOTIFY ZDO_NODE_DESCRIPTOR_REQUEST ZDO_DEVICE_ANNOUNCE ZDO_DEVICE_ANNOUNCE MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST ZDO_NODE_DESCRIPTOR_REQUEST MAC_BEACON_REQUEST NWK_REJOIN_REQUEST_SECURE ZDO_DEVICE_ANNOUNCE MAC_DATA_REQUEST MAC_DISASSOCIATION_NOTIFY MAC_DISASSOCIATION_NOTIFY MAC_DISASSOCIATION_NOTIFY NWK_REJOIN_REQUEST_SECURE MAC_DATA_REQUEST / EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE EMPTYRESPONSE MAC_BEACON EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE NWK_REJOIN_RESPONSE_SUCCESS]
+CE 7:Query[ε|APS_VERIFY_KEY MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST NWK_REJOIN_REQUEST_UNSECURED ZDO_DEVICE_ANNOUNCE NWK_REJOIN_REQUEST_SECURE APS_VERIFY_KEY MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST NWK_REJOIN_REQUEST_UNSECURED NWK_REJOIN_REQUEST_SECURE NWK_REJOIN_REQUEST_UNSECURED APS_REQUEST_KEY MAC_DATA_REQUEST ZDO_NODE_DESCRIPTOR_REQUEST NWK_REJOIN_REQUEST_SECURE ZDO_NODE_DESCRIPTOR_REQUEST APS_VERIFY_KEY MAC_DATA_REQUEST / EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE APS_CMD_TRANSPORT_TC_LINK_KEY EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE APS_CONFIRM_KEY]
+CE 8:Query[ε|MAC_BEACON_REQUEST MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST MAC_DATA_REQUEST APS_VERIFY_KEY MAC_ASSOCIATION_REQUEST ZDO_NODE_DESCRIPTOR_REQUEST MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST ZDO_DEVICE_ANNOUNCE NWK_REJOIN_REQUEST_UNSECURED ZDO_NODE_DESCRIPTOR_REQUEST MAC_DATA_REQUEST NWK_REJOIN_REQUEST_SECURE MAC_DATA_REQUEST ZDO_NODE_DESCRIPTOR_REQUEST APS_VERIFY_KEY MAC_DISASSOCIATION_NOTIFY NWK_REJOIN_REQUEST_UNSECURED MAC_DATA_REQUEST / MAC_BEACON EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE ZDO_NODE_DESCRIPTOR_RESPONSE EMPTYRESPONSE NWK_REJOIN_RESPONSE_SUCCESS EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE]
+Number of inputs when hypothesis was generated: [10, 478, 2220, 2740, 3381, 5535, 6109, 7907]
+Number of tests when hypothesis was generated: [10, 119, 345, 423, 488, 688, 732, 865]
+Time (ms) when hypothesis was generated: [94630, 3849248, 17236256, 21333232, 26351612, 43190326, 47416097, 61200729]
+Number of inputs when counterexample was found: [85, 1030, 2284, 2923, 3675, 5689, 7345, 8161]
+Number of tests when counterexample was found: [15, 161, 349, 435, 502, 694, 801, 880]
+Time (ms) when counterexample was found: [720849, 8155418, 17686725, 22810271, 28634585, 44326544, 56977024, 63175284]
+
+09:26:57 [main] DEBUG : SulZigbee - Closing serial port...
+[restart] started, pid=192595
+[restart] tail -f /home/eliza/Coding/Thesis/zigbee-fuzzer/.logs/dev-cli.log
+[restart] manual-start: done
+

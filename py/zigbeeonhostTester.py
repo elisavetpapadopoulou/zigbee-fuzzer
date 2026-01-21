@@ -54,9 +54,15 @@ def _mk_mac_ll(pkt):
 
 def is_nwk_link_status(pkt_plain):
     nwk = pkt_plain.getlayer(ZigbeeNWK)
-    if not nwk or nwk.frametype != 1: return False
     cmd = pkt_plain.getlayer(ZigbeeNWKCommandPayload)
-    return getattr(cmd, "cmd_identifier", None) == 0x08
+    if not nwk:
+        return False
+    if nwk.frametype != 1:
+        return False
+    cmd_id = getattr(cmd, "cmd_identifier", None)
+    print("[is_nwk_link_status()] cmd_identifier: ", cmd_id)
+    return cmd_id == 0x08
+
 
 def rebuild_plain_nwk(pkt, plaintext: bytes):
         """
@@ -103,6 +109,70 @@ def rebuild_plain_aps(pkt, plaintext: bytes):
     new_pkt.show2()
     return new_pkt
 
+def build_zcl_read_attributes(pan_id, dst_short, dst_ieee, src_short, src_ieee, mac_seq, nwk_seq, aps_seq):
+    return Dot15d4FCS(
+                fcf_frametype = 1,
+                fcf_security=0,
+                fcf_ackreq=0,
+                fcf_panidcompress=1,
+                fcf_destaddrmode=2,
+                fcf_srcaddrmode=2,
+                seqnum=mac_seq & 0xFF
+            )/ Dot15d4Data(
+                dest_panid=pan_id,
+                dest_addr=dst_short,
+                src_addr=src_short
+            )/ ZigbeeNWK(
+                frametype=0,
+                proto_version=2,
+                source=src_short,
+                destination=dst_short,
+                radius=30,
+                seqnum=nwk_seq & 0xFF,
+            )/ ZigbeeAppDataPayload(
+                aps_frametype=0,
+                delivery_mode=0,
+                profile=0x0104,
+                cluster=0x0000,
+                src_endpoint=1,
+                dst_endpoint=1,
+                counter=aps_seq & 0xFF,
+                frame_control=0
+            )
+
+def build_zcl_discover_attributes(pan_id, dst_short, src_short, mac_seq, nwk_seq):
+    return Dot15d4FCS(
+                fcf_frametype = 1,
+                fcf_security=0,
+                fcf_ackreq=0,
+                fcf_panidcompress=1,
+                fcf_destaddrmode=2,
+                fcf_srcaddrmode=2,
+                seqnum=mac_seq & 0xFF
+            )/ Dot15d4Data(
+                dest_panid=pan_id,
+                dest_addr=dst_short,
+                src_addr=src_short
+            )/ ZigbeeNWK(
+                frametype=0,
+                proto_version=2,
+                source=src_short,
+                destination=dst_short,
+                radius=30,
+                seqnum=nwk_seq & 0xFF
+            )/ ZigbeeAppDataPayload(
+                profile=0x0104,
+                cluster=0x0000,
+                src_endpoint=0,
+                dst_endpoint=0
+            )/ Raw(
+                b"\x00"
+                b"\x02"
+                b"\x0C"
+                b"\x00\x00"
+                b"\x05"
+            )
+
 def build_aps_update_device(pan_id, dst_short, src_short, src_ieee,
                             mac_seq, nwk_seq, aps_seq,
                             update_status=0x00):
@@ -147,7 +217,7 @@ def build_aps_update_device(pan_id, dst_short, src_short, src_ieee,
         )
     )
 
-def build_nwk_rejoin_request(pan_id, dst_short, src_short, src_ieee, mac_seq, nwk_seq):
+def build_unsecured_nwk_rejoin_request(pan_id, dst_short, src_short, src_ieee, dst_ieee, mac_seq, nwk_seq):
     return Dot15d4FCS(
                 fcf_frametype=1,
                 fcf_security=0,
@@ -167,7 +237,40 @@ def build_nwk_rejoin_request(pan_id, dst_short, src_short, src_ieee, mac_seq, nw
                 source=src_short,
                 radius=1,
                 seqnum=nwk_seq & 0xFF,
-                ext_src=src_ieee
+                ext_src=src_ieee,
+                ext_dst=dst_ieee
+            ) / ZigbeeNWKCommandPayload(
+                cmd_identifier="rejoin request",
+                security_capability=0,
+                allocate_address=1,
+                device_type=0,
+                power_source=0,
+                receiver_on_when_idle=0,
+                alternate_pan_coordinator=0
+            )
+
+def build_nwk_rejoin_request(pan_id, dst_short, src_short, src_ieee, dst_ieee, mac_seq, nwk_seq):
+    return Dot15d4FCS(
+                fcf_frametype=1,
+                fcf_security=0,
+                fcf_ackreq=1,
+                fcf_panidcompress=1,
+                fcf_destaddrmode=2,
+                fcf_srcaddrmode=3,
+                seqnum= mac_seq & 0xFF
+            ) / Dot15d4Data(
+                dest_panid=pan_id,
+                dest_addr=dst_short,
+                src_addr=src_ieee
+            ) / ZigbeeNWK(
+                frametype=1,
+                flags="extended_src",
+                destination=dst_short,
+                source=src_short,
+                radius=1,
+                seqnum=nwk_seq & 0xFF,
+                ext_src=src_ieee,
+                ext_dst=dst_ieee
             ) / ZigbeeNWKCommandPayload(
                 cmd_identifier="rejoin request",
                 security_capability=0,
@@ -272,7 +375,7 @@ def build_verify_aps_key(pan_id, dst_short, src_short, src_ieee, mac_seq, nwk_se
         )/ ZigbeeNWK(
             frametype = 0,
             destination=dst_short,
-            flags=0x12,
+            flags='extended_src',
             source=src_short,
             ext_src=src_ieee,
             radius=30,
@@ -281,9 +384,12 @@ def build_verify_aps_key(pan_id, dst_short, src_short, src_ieee, mac_seq, nwk_se
             aps_frametype=1,
             delivery_mode=0,
             frame_control=6,
-            counter=aps_counter & 0xFF
+            counter=(aps_counter+1) & 0xFF
         )/ ZigbeeAppCommandPayload(
+            key_type=0x04,
+            address=src_ieee,
             cmd_identifier=0x0F,
+            key_hash=tc_link_key
         )
 
 def build_aps_request_key(pan_id, dst_short, src_short, src_ieee,
@@ -339,7 +445,7 @@ def build_zdo_node_descriptor_request(pan_id, src_short, aps_ctr, mac_seq, nwk_s
             radius=30,
             seqnum=(nwk_seq + 1) & 0xFF
         )/ ZigbeeAppDataPayload(
-            frame_control=4,
+            frame_control=0,
             aps_frametype=0,
             delivery_mode=0,
             counter=(aps_ctr + 1) & 0xFF,
@@ -351,7 +457,7 @@ def build_zdo_node_descriptor_request(pan_id, src_short, aps_ctr, mac_seq, nwk_s
     )
 
 
-def build_zdo_device_announce(pan_id, src_short, src_ieee, aps_ctr, mac_seq, nwk_seq, cap=0x6C):
+def build_zdo_device_announce(pan_id, src_short, src_ieee, aps_ctr, mac_seq, nwk_seq, zdo_tsn, cap=0x6C):
     return Dot15d4FCS(
             fcf_frametype = 1,
             fcf_security=0,
@@ -373,13 +479,13 @@ def build_zdo_device_announce(pan_id, src_short, src_ieee, aps_ctr, mac_seq, nwk
         )/ ZigbeeAppDataPayload(
             frame_control=0x00,
             aps_frametype=0,
-            delivery_mode=0,
+            delivery_mode=2,
             counter=aps_ctr & 0xFF,
             profile=0x0000,
             cluster=0x0013,
             src_endpoint=0,
             dst_endpoint=0
-        )/ Raw(src_short.to_bytes(2,"little") + src_ieee.to_bytes(8, "little") + bytes([cap & 0xFF]))
+        )/ Raw(bytes([zdo_tsn & 0xFF]) + src_short.to_bytes(2,"little") + src_ieee.to_bytes(8, "little") + bytes([cap & 0xFF]))
 
 def build_nwk_route_reply(pan_id, src_short, dest_short, mac_seq, nwk_seq, rri):
     return Dot15d4FCS(
@@ -473,20 +579,25 @@ class AliveNode:
         self.aps_seq = 1
         self.sec_nwk_fc: int = 0x01000000
         self.sec_aps_fc: int = 0x01000000
-        self.trying_association = False
-        self.associated = False
-        self.announcing = False
-        self.requesting_aps_key = False
         self.chosen_pan = None
         self.src_short = None
-        self.src_ieee = 0x79bc000000010002
+        self.src_ieee = 0x79bc000000010003
         self.dest_short = 0x0000
+        self.dest_ieee = 0x6c63696c63696c63
         self.cap = 0x8E
         self.zdo_tsn = 0
         self.seen_rreq = set()
         self.tc_link_key = bytes([90,105,103,66,101,101,65,108,108,105,97,110,99,101,48,57])
         self.nwk_key = {}
-        self.final = False
+        self.trying_association = False
+        self.associated = False
+        # self.announcing = False
+        # self.requesting_aps_key = False
+        self.nwk_secured = False
+        self.aps_secured = False
+        self.verified = False
+        self.nwk_rejoining = False
+        self.nwk_rejoined = False
 
     def aps_encrypt(self, pkt):
         # Force APS header bits (visible)
@@ -567,15 +678,11 @@ class AliveNode:
 
 
         frame = mac / ll / nwk / Raw(nwk_aux_b + C + U)
-        print(f"APS_CMD_REQUEST_KEY: {bytes(frame).hex()}")
         return frame
 
 
     def decode(self, pkt):
         sec = pkt.getlayer("ZigbeeSecurityHeader")
-        if self.final and not is_nwk_link_status(pkt):
-            print("APS_CMD_REQUEST_KEY")
-            pkt.show2()
 
         # Security Control fields
         extended_nonce = int(sec.extended_nonce)
@@ -743,17 +850,7 @@ class AliveNode:
                     return None
             elif owner is ZigbeeAppDataPayload:
                 pkt = rebuild_plain_aps(pkt, plaintext)
-                if key_id == 2:
-                    aps_cmd = pkt.getlayer(ZigbeeAppCommandPayload)
-                    if aps_cmd and hasattr(aps_cmd, "key_seqnum") and hasattr(aps_cmd, "key"):
-                        self.nwk_key = {aps_cmd.key_seqnum: bytes(aps_cmd.key)}
-                        self.aps_update_device()
-                        sleep(15)
-                        self.request_aps_key()
-                        self.final = True
-                else:
-                    break
-        return pkt
+        return Dot15d4FCS(bytes(pkt))
 
     def zigbee_hmac(self, message, key):
         # HMAC uses the following inner and outer pads
@@ -807,7 +904,7 @@ class AliveNode:
         sleep(10)
         pkt = build_beacon_request_noaddr(pan_id=0xFFFF, dest_short=0xFFFF, src_ieee=self.src_ieee, mac_seq=self.mac_seq & 0xFF)
         self.mac_seq += 1
-        print(f"[TX] Beacon Request (no addressing): {bytes(pkt).hex(" ")}")
+        print(f"[TX] Beacon Request (no addressing): {bytes(pkt).hex(' ')}")
         self.radio.inject_air_frame_with_meta(bytes(pkt), True)
 
     def try_assoc(self):
@@ -843,10 +940,17 @@ class AliveNode:
         self.radio.inject_air_frame_with_meta(bytes(frame))
         print("[TX] APS Request Key (APS+NWK secured)")
         frame.show2()
+        self.mac_seq += 1
+        self.nwk_seq += 1
+        self.aps_seq += 1
         sleep(2)
         self.pull_assoc(self.chosen_pan, self.dest_short)
 
     def verify_aps_key(self):
+        src_ieee_le = int(self.src_ieee).to_bytes(8, "little")
+        tc_ieee_le = int(self.dest_ieee).to_bytes(8, "little")
+
+        verify_hash = self.zigbee_hmac(b"\x03", self.tc_link_key)
         frame = build_verify_aps_key(
             pan_id   = self.chosen_pan,
             dst_short= 0x0000,
@@ -855,25 +959,33 @@ class AliveNode:
             mac_seq  = self.mac_seq & 0xFF,
             nwk_seq  = self.nwk_seq,
             aps_counter  = self.aps_seq,
-            tc_link_key = self.tc_link_key,
+            tc_link_key = verify_hash,
         )
 
         frame, aps_bytes = self.aps_encrypt(frame)
-        key_seqnum = max(self.nwk_key.keys())
-        nwk_key    = self.nwk_key[key_seqnum]
-        frame = self.nwk_encrypt(frame, key_seqnum, nwk_key, self.src_ieee, aps_bytes)
+        # aps_bytes = bytes(frame[ZigbeeAppCommandPayload])
+        # key_seqnum = max(self.nwk_key.keys())
+        # nwk_key    = self.nwk_key[key_seqnum]
+        # frame = self.nwk_encrypt(frame, key_seqnum, nwk_key, self.src_ieee, aps_bytes)
         self.radio.inject_air_frame_with_meta(bytes(frame))
         print("[TX] APS Verify Key (APS+NWK secured)")
         frame.show2()
         sleep(2)
         self.mac_seq = (self.mac_seq + 1) & 0xFF
         self.nwk_seq = (self.nwk_seq + 1) & 0xFF
+        self.aps_seq = (self.aps_seq + 1) & 0xFF
         self.pull_assoc(self.chosen_pan, self.dest_short)
 
 
     def zdo_device_announce(self):
-        frame = build_zdo_device_announce(pan_id=self.chosen_pan, src_short=self.src_short, src_ieee=self.src_ieee, aps_ctr=self.aps_seq, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq, cap=0x6C)
+        frame = build_zdo_device_announce(pan_id=self.chosen_pan, src_short=self.src_short, src_ieee=self.src_ieee, aps_ctr=self.aps_seq, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq, zdo_tsn=self.zdo_tsn, cap=0x6C)
         self.mac_seq = (self.mac_seq + 1) & 0xFF
+        self.nwk_seq = (self.nwk_seq + 1) & 0xFF
+        self.aps_seq = (self.aps_seq + 1) & 0xFF
+        self.zdo_tsn = (self.zdo_tsn + 1) & 0xFF
+        key_seqnum = max(self.nwk_key.keys())
+        nwk_key    = self.nwk_key[key_seqnum]
+        frame = self.nwk_encrypt(frame, key_seqnum, nwk_key, self.src_ieee, bytes(frame[ZigbeeAppDataPayload]))
         self.radio.inject_air_frame_with_meta(bytes(frame))
         print("[TX] ZDO Device Announce")
 
@@ -889,18 +1001,23 @@ class AliveNode:
         self.radio.inject_air_frame_with_meta(bytes(frame))
         self.mac_seq = (self.mac_seq + 1) & 0xFF
         self.nwk_seq = (self.nwk_seq + 1) & 0xFF
+        self.aps_seq = (self.aps_seq + 1) & 0xFF
         print("[TX] Network Route Reply")
 
     def zdo_node_descriptor_request(self):
-        frame = build_zdo_node_descriptor_request(pan_id=self.chosen_pan, src_short=self.src_short, aps_ctr=self.aps_seq, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq, zdo_tsn=self.zdo_tsn, target_nwk=0x0000)
+        pkt = build_zdo_node_descriptor_request(pan_id=self.chosen_pan, src_short=self.src_short, aps_ctr=self.aps_seq, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq, zdo_tsn=self.zdo_tsn, target_nwk=0x0000)
         key_seqnum = next(reversed(self.nwk_key))
         nwk_key = self.nwk_key[key_seqnum]
-        frame = self.nwk_encrypt(frame, key_seqnum, nwk_key, self.src_ieee, self.sec_nwk_fc)
+        frame = self.nwk_encrypt(pkt, key_seqnum, nwk_key, self.src_ieee, bytes(pkt[ZigbeeAppDataPayload]))
         self.mac_seq = (self.mac_seq + 1) & 0xFF
         self.nwk_seq = (self.nwk_seq + 1) & 0xFF
+        self.aps_seq = (self.aps_seq + 1) & 0xFF
+        self.zdo_tsn = (self.zdo_tsn + 1) & 0xFF
         self.sec_nwk_fc += 1
         self.radio.inject_air_frame_with_meta(bytes(frame))
         print("[TX] ZDO Node Descriptor Request")
+        pkt.show2()
+        frame.show2()
         for i in range(3):
             self.pull_assoc(self.chosen_pan, self.dest_short)
             sleep(5)
@@ -930,12 +1047,13 @@ class AliveNode:
             sleep(5)
 
     def nwk_rejoin_request(self):
-        frame = build_nwk_rejoin_request(pan_id=self.chosen_pan, dst_short=self.dest_short, src_short=self.src_short, src_ieee=self.src_ieee, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq)
+        frame = build_nwk_rejoin_request(pan_id=self.chosen_pan, dst_short=self.dest_short, src_short=self.src_short, src_ieee=self.src_ieee, dst_ieee=self.dest_ieee, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq)
+        # key_seqnum = max(self.nwk_key.keys())
+        # nwk_key    = self.nwk_key[key_seqnum]
+        # frame = self.nwk_encrypt(frame, key_seqnum, nwk_key, self.src_ieee, bytes(frame[ZigbeeNWKCommandPayload]))
         self.radio.inject_air_frame_with_meta(bytes(frame))
+        print("[TX] NWK Rejoin Request (NWK-unencrypted)")
         print(frame.show2())
-        for i in range(3):
-            self.pull_assoc(self.chosen_pan, self.dest_short)
-            sleep(5)
 
     def aps_update_device(self):
         frame = build_aps_update_device(pan_id=self.chosen_pan, dst_short=self.dest_short, src_short=self.src_short, src_ieee=self.src_ieee, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq, aps_seq=self.aps_seq)
@@ -952,6 +1070,25 @@ class AliveNode:
         sleep(2)
         self.pull_assoc(self.chosen_pan, self.dest_short)
         self.pull_assoc(self.chosen_pan, self.dest_short)
+
+    def zcl_read_attributes(self):
+        frame = build_zcl_read_attributes(pan_id=self.chosen_pan, src_short=self.src_short, src_ieee=self.src_ieee, dst_short=self.dest_short, dst_ieee=self.dest_ieee, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq, aps_seq=self.aps_seq)
+        print("[TX] ZCL Read Attributes")
+        key_seqnum = max(self.nwk_key.keys())
+        nwk_key    = self.nwk_key[key_seqnum]
+        frame = self.nwk_encrypt(frame, key_seqnum, nwk_key, self.src_ieee, bytes(frame[ZigbeeAppDataPayload]))
+        self.radio.inject_air_frame_with_meta(bytes(frame))
+        sleep(2)
+
+    def zcl_discover_attributes(self):
+        frame = build_zcl_discover_attributes(pan_id=self.chosen_pan, src_short=self.src_short, dst_short=self.dest_short, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq)
+        print("[TX] ZCL Discover Attributes")
+        key_seqnum = max(self.nwk_key.keys())
+        nwk_key    = self.nwk_key[key_seqnum]
+        frame = self.nwk_encrypt(frame, key_seqnum, nwk_key, self.src_ieee, bytes(frame[ZigbeeAppDataPayload]))
+        self.radio.inject_air_frame_with_meta(bytes(frame))
+        sleep(2)
+
 
     def rx_loop(self):
         while True:
@@ -975,19 +1112,39 @@ class AliveNode:
                 if raw:
                     print("[RX hex]", raw.hex(" "))
 
+            print(1)
+
             if pkt.haslayer(ZigbeeSecurityHeader):
-                if not is_nwk_link_status(pkt):
-                    decoded = self.decode_all(pkt)
-                    if decoded is not None and self.final and not is_nwk_link_status(decoded):
-                        pkt = decoded if decoded is not None else pkt
-                        print("[DECODED]")
-                        pkt.show2()
-                        self.verify_aps_key()
-                        self.final = False
-                        sleep(2)
-                        self.nwk_rejoin_request()
+                decoded = self.decode_all(pkt)
+                if decoded is not None and not is_nwk_link_status(decoded):
+                    pkt = decoded
+                    print("[DECODED]")
+                    print(bytes(pkt).hex())
+                    pkt.show2()
+                    if self.aps_secured and not self.verified:
+                        if pkt.haslayer(ZigbeeAppCommandPayload):
+                            app_cmd = pkt[ZigbeeAppCommandPayload]
+                            if getattr(app_cmd, "cmd_identifier", -1) == 16 and getattr(app_cmd, "status", -1) == 0:
+                                print("APS_CONFIRM_KEY has arrived!")
+                                self.verified = True
+                        if not self.verified:
+                            self.verify_aps_key()
+                            continue
+                else:
+                    continue
+
+            print(2)
+            pkt = Dot15d4FCS(bytes(pkt))
+            self.pull_assoc(self.chosen_pan, self.dest_short)
+            self.aps_seq += 1
+
+            if self.verified and not self.nwk_rejoining and not self.nwk_rejoined:
+                self.nwk_rejoining = True
+                self.nwk_rejoin_request()
+                continue
 
             assert(isinstance(pkt, Packet))
+            print(3)
 
             if pkt.haslayer(Dot15d4FCS):
                 self.mac_seq = (getattr(pkt, "seqnum", self.mac_seq) + 1) & 0xFF
@@ -1003,6 +1160,20 @@ class AliveNode:
                     self.pull_assoc(self.chosen_pan, self.dest_short)
                     sleep(5)
 
+            print(4)
+
+            if pkt.haslayer(ZigbeeNWK) and pkt.haslayer(ZigbeeNWKCommandPayload):
+                nwk_cmd = pkt[ZigbeeNWKCommandPayload]
+                cmd_id = (getattr(nwk_cmd, "cmd_identifier", -1))
+                print("NWK_CMD = ", cmd_id)
+                if cmd_id == 7:
+                    print("NWK_REJOIN_RESPONSE")
+                    self.src_short = getattr(nwk_cmd, "network_address", self.src_short)
+                    # self.pull_assoc(self.chosen_pan, self.dest_short)
+                    self.nwk_rejoined = True
+                    self.zdo_node_descriptor_request()
+            print(5)
+
             # --- Beacon detection + immediate AssocReq using Scapy fields ---
             if isinstance(pkt, Dot15d4FCS) and getattr(pkt, "fcf_frametype", None) == 0 and not self.associated and not self.trying_association:
                 if getattr(pkt, "sf_assocpermit", None) == True and self.chosen_pan == None:
@@ -1012,7 +1183,7 @@ class AliveNode:
                     if self.chosen_pan is None:
                         # Fallback to raw heuristic if needed
                         if len(raw) >= 2 and raw[0:2] == b"\x00\x80":
-                            # You already confirmed Scapy shows src_panid; this is just a guard.
+                            # You alresrc_ieee scapy shows src_panid; this is just a guard.
                             pass
                     if self.chosen_pan is not None:
                         if self.dest_short is None:
@@ -1020,10 +1191,7 @@ class AliveNode:
                         print(f"[*] Beacon seen. PAN=0x{self.chosen_pan:04X}, coord=0x{self.dest_short:04X}. Trying to associate…")
                         self.try_assoc()
                         self.trying_association = True
-
-            if self.trying_association:
-                self.pull_assoc(self.chosen_pan, self.dest_short)
-                sleep(5)
+                        continue
 
             # --- Association Response detection (MAC command id = 0x02) ---
             # if raw and 0x02 in raw[-6:] and not self.associated:
@@ -1037,13 +1205,18 @@ class AliveNode:
                 self.pull_assoc(self.chosen_pan, self.dest_short)
                 # self.zdo_device_announce()
                 # self.announcing = True
-                sleep(10)
-                self.mac_gts_request()
-                self.send_beacon_request()
+                # sleep(10)
+                # self.mac_gts_request()
                 # sleep(4)
                 # self.mac_orphan_notification()
                 # sleep(4)
                 # self.mac_disassociation_notification()
+                continue
+
+            if self.trying_association:
+                self.pull_assoc(self.chosen_pan, self.dest_short)
+                sleep(2)
+                continue
 
             if pkt.haslayer(Dot15d4Data) and pkt.haslayer(ZigbeeNWK) and pkt.haslayer(ZigbeeAppDataPayload):
                 nwk = pkt[ZigbeeNWK]
@@ -1063,17 +1236,29 @@ class AliveNode:
                 elif aps.aps_frametype == 0:
                     if int(aps.profile) == 0x0000 and int(aps.cluster) == 0x8002:
                         print("[RX] ZDO Node Descriptor Response spotted")
-                        self.request_aps_key()
+                        # self.request_aps_key()
                         sleep(3)
                         self.pull_assoc(self.chosen_pan, self.dest_short)
                     else:
                         print("[RX]", pkt.summary())
             if pkt.haslayer(ZigbeeAppCommandPayload):
+                aps_cmd = pkt[ZigbeeAppCommandPayload]
                 "[RX] Transport Key maybe??"
                 cmd_id = int(pkt[ZigbeeAppCommandPayload].cmd_identifier)
                 if cmd_id == 0x05:
-                    # pkt.show2()
                     print(f"[+] Transport Key spotted.")
+                    transported_key = getattr(aps_cmd, "key_type", -1)
+                    key_bytes = bytes(getattr(aps_cmd, "key", b""))
+                    if key_bytes:
+                        if transported_key == 0x01:
+                            print(f"[*] Transport NWK Key spotted")
+                            self.nwk_key = {aps_cmd.key_seqnum: key_bytes}
+                            self.nwk_secured = True
+                            self.request_aps_key()
+                        elif transported_key == 0x04:
+                            print(f"[*] Transport TC Link Key spotted")
+                            self.tc_link_key = key_bytes
+                            self.aps_secured = True
                 elif cmd_id == 0x0B:
                     print("[RX] APS Update Device")
 

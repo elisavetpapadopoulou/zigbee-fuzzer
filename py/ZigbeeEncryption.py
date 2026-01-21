@@ -51,9 +51,9 @@ def _mk_mac_ll(pkt):
 def is_nwk_link_status(pkt_plain):
     nwk = pkt_plain.getlayer(ZigbeeNWK)
     cmd = pkt_plain.getlayer(ZigbeeNWKCommandPayload)
-    if not nwk: 
+    if not nwk:
         return False
-    if nwk.frametype != 1: 
+    if nwk.frametype != 1:
         return False
     cmd_id = getattr(cmd, "cmd_identifier", None)
     print("[is_nwk_link_status()] cmd_identifier: ", cmd_id)
@@ -134,7 +134,12 @@ def aps_encrypt(self, pkt):
     nonce = src_le + fc_le + bytes([sec_fixed])
     aad   = aps_hdr_b + bytes([sec_fixed]) + fc_le + src_le
 
-    ccm = AES.new(self.config["tc_link_key"], AES.MODE_CCM, nonce=nonce, mac_len=4)
+    if self.config["tc_link_key"] != 0:
+        tc_key = self.config["tc_link_key"]
+    else:
+        tc_key = self.config["tc_global_key"]
+
+    ccm = AES.new(tc_key, AES.MODE_CCM, nonce=nonce, mac_len=4)
     ccm.update(aad)
     C = ccm.encrypt(PT)
     U = ccm.digest()
@@ -219,19 +224,24 @@ def decode(self, pkt):
 
     key_seqnum = sec.key_seqnum
     key = ""
+
+    if self.config["tc_link_key"] != 0:
+        tc_key = self.config["tc_link_key"]
+    else:
+        tc_key = self.config["tc_global_key"]
+
     if key_id == 1:
         if self.config["network_key"] != {}:
             key = self.config["network_key"][key_seqnum]
             keylen = len(key)
         else:
-            print("NWK key not stored yet")
             return None, key_id
     elif key_id == 2:
-        key = zigbee_hmac(self, b"\x00", self.config["tc_link_key"])
+        key = zigbee_hmac(self, b"\x00", tc_key)
     elif key_id == 3:
-        key = zigbee_hmac(self, b"\x02", self.config["tc_link_key"])
+        key = zigbee_hmac(self, b"\x02", tc_key)
     else:
-        key = self.config["tc_link_key"]
+        key = tc_key
 
     # Step 3 of Specification: is ignored for now 
     # Step 4 of Specification
@@ -295,6 +305,36 @@ def decode(self, pkt):
     print(f"[APS] Decrypted OK (key_id={key_id}, sec_ctrl_wire=0x{security_control:02x})")
 
     return plaintext, key_id
+def zigbee_hmac(self, message, key):
+    # HMAC uses the following inner and outer pads
+    inner_pad = 0x36
+    outer_pad = 0x5c
+
+    # Hash the key if it is longer than the block size
+    if len(key) > 16:
+        key = bytearray(zigbee_mmo_hash(self, key))
+    else:
+        key = bytearray(key)
+
+    # Pad the key with zeros if it is shorter than the block size
+    for _ in range(16 - len(key)):
+        key.append(0x00)
+
+    # Sanity check
+    if len(key) != 16:
+        raise ValueError(
+            "The length of the key ({}) ".format(len(key))
+            + "is not equal to the block size ({})".format(16),
+        )
+
+    # Compute the inner and outer keys
+    inner_key = bytearray(key)
+    outer_key = bytearray(key)
+    for i in range(16):
+        inner_key[i] ^= inner_pad
+        outer_key[i] ^= outer_pad
+
+    return zigbee_mmo_hash(self, outer_key + zigbee_mmo_hash(self, inner_key + message))
 
 def zigbee_mmo_hash(self, message):
     # Initial value for the digest of the message
@@ -346,43 +386,20 @@ def decode_all(self, pkt):
             #     return None
         elif owner is ZigbeeAppDataPayload:
             pkt = rebuild_plain_aps(pkt, plaintext)
-            if key_id == 2:
-                aps_cmd = pkt.getlayer(ZigbeeAppCommandPayload)
-                if aps_cmd and hasattr(aps_cmd, "key_seqnum") and hasattr(aps_cmd, "key"):
-                    self.config["network_key"] = {aps_cmd.key_seqnum: bytes(aps_cmd.key)}
-            else:
-                break
-    return pkt
+            # aps_cmd = pkt.getlayer(ZigbeeAppCommandPayload)
+            # if aps_cmd:
+            #     cmd_id = getattr(aps_cmd, "cmd_identifier", -1)
+            #     if cmd_id == 0x05:
+            #         transported_key = getattr(aps_cmd, "key_type", -1)
+            #         key_bytes = bytes(getattr(aps_cmd, "key", b""))
+            #         if key_bytes:
+            #             if transported_key == 0x01:
+            #                 self.config["network_key"] = {aps_cmd.key_seqnum: key_bytes}
+            #             elif transported_key == 0x04:
+            #                 self.config["tc_link_key"] = key_bytes
+            # else:
+            #     break
+    return Dot15d4FCS(bytes(pkt))
 
-def zigbee_hmac(self, message, key):
-    # HMAC uses the following inner and outer pads
-    inner_pad = 0x36
-    outer_pad = 0x5c
-
-    # Hash the key if it is longer than the block size
-    if len(key) > 16:
-        key = bytearray(zigbee_mmo_hash(self, key))
-    else:
-        key = bytearray(key)
-
-    # Pad the key with zeros if it is shorter than the block size
-    for _ in range(16 - len(key)):
-        key.append(0x00)
-
-    # Sanity check
-    if len(key) != 16:
-        raise ValueError(
-            "The length of the key ({}) ".format(len(key))
-            + "is not equal to the block size ({})".format(16),
-        )
-
-    # Compute the inner and outer keys
-    inner_key = bytearray(key)
-    outer_key = bytearray(key)
-    for i in range(16):
-        inner_key[i] ^= inner_pad
-        outer_key[i] ^= outer_pad
-
-    return zigbee_mmo_hash(self, outer_key + zigbee_mmo_hash(self, inner_key + message))
 
 

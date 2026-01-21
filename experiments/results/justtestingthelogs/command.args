@@ -1,12 +1,12 @@
 state-fuzzer-server
 -output
-ecdxperiments/results/zboh
+experiments/results/justtestingthelogs
 -alphabet
-experiments/alphabets/ZigbeeAssoc.xml
+experiments/alphabets/association-nwkEntering.xml
 -equivalenceQueryBound
 5000
 -logQueries
 -adapter
-tcp://127.0.0.1:6000
+localhost:6000
 -connect
 EB:D8:6B:33:90:0B
