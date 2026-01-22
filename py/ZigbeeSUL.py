@@ -385,6 +385,7 @@ class ZigbeeSUL:
         if self.network_secured:
             pkt = nwk_encrypt(self, frame, aps_bytes)
             input_symbol = input_symbol+"_ENCRYPTED"
+            print("Request Key - Network Secured")
         else:
             pkt = frame
             input_symbol = input_symbol+"_PLAIN"
