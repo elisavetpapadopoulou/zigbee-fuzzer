@@ -2,7 +2,7 @@ state-fuzzer-server
 -output
 experiments/results/updated-symbols-v2
 -alphabet
-experiments/alphabets/association-nwkEntering.xml
+experiments/alphabets/tclinkkeytest.xml
 -equivalenceQueryBound
 5000
 -logQueries

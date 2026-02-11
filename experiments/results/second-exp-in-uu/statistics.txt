@@ -1,0 +1,78 @@
+=== RUN DESCRIPTION ===
+Alphabet: [MAC_BEACON_REQUEST, MAC_ASSOCIATION_REQUEST, MAC_DATA_REQUEST, MAC_DISASSOCIATION_NOTIFY, ZDO_NODE_DESCRIPTOR_REQUEST, NWK_REJOIN_REQUEST_TC, NWK_REJOIN_REQUEST_SECURE, APS_REQUEST_KEY, APS_VERIFY_TC_LINK_KEY, APS_VERIFY_GLOBAL_KEY]
+
+StateFuzzerConfig Parameters
+Help: false
+Debug: false
+Quiet: false
+Output Directory: experiments/results/second-exp-in-uu
+Fuzzing Client: false
+
+LearnerConfig Parameters
+Alphabet: experiments/alphabets/association-nwkEntering.xml
+Learning Algorithm: TTT
+Equivalence Algorithms: [RANDOM_WP_METHOD]
+Max Depth: 1
+Min Length: 5
+Max Length: 15
+Max Equivalence Queries: 5000
+Runs Per Membership Query: 1
+Random Length: 5
+Membership Query Retries: 3
+Log Queries: true
+Prob Reset: 0.0
+Test File: null
+Seed: 0
+Cache Tests: false
+Ce Sanitization: true
+Skip Non Det Tests: false
+Ce Reruns: 3
+Probabilistic Sanitization: true
+Time Limit: null
+Test Limit: null
+Round Limit: null
+IOMode: true
+Probability of Choosing a New DataValue: 0.1
+Max Runs: 1
+Max Depth for Register Automata: 1
+Reset Runs: true
+Seed transitions: true
+Draw symbols uniformly: true
+
+SulServerConfigZigbee Parameters
+Zigbee Adapter: localhost:6000
+Mapper: null
+Target addr: EB:D8:6B:33:90:0B
+
+MapperConfig Parameters
+Mapper Connection Config: null
+Repeating Outputs: null
+Socket Closed as Timeout: false
+Disabled as Timeout: false
+Merge Repeating: false
+
+SulAdapterConfig Parameters
+Adapter Port: null
+Adapter Address: localhost
+
+=== STATISTICS ===
+Learning finished: false
+Reason: Index 1 out of bounds for length 1
+Size of the input alphabet: 10
+Number of states: 1
+Number of hypotheses: 1
+Number of inputs: 156
+Number of tests: 33
+Number of learning inputs: 10
+Number of learning tests: 10
+Number of inputs up to last hypothesis: 10
+Number of tests up to last hypothesis: 10
+Time (ms) to learn model: 1225599
+Counterexamples:
+CE 1:Query[ε|APS_REQUEST_KEY NWK_REJOIN_REQUEST_SECURE MAC_ASSOCIATION_REQUEST MAC_BEACON_REQUEST MAC_ASSOCIATION_REQUEST MAC_BEACON_REQUEST ZDO_NODE_DESCRIPTOR_REQUEST MAC_DATA_REQUEST MAC_DISASSOCIATION_NOTIFY MAC_ASSOCIATION_REQUEST MAC_DATA_REQUEST APS_REQUEST_KEY MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON(assoc_permit=1) EMPTYRESPONSE MAC_BEACON(assoc_permit=1) EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE EMPTYRESPONSE MAC_ASSOCIATION_RESPONSE(status=0) EMPTYRESPONSE EMPTYRESPONSE]
+Number of inputs when hypothesis was generated: [10]
+Number of tests when hypothesis was generated: [10]
+Time (ms) when hypothesis was generated: [88245]
+Number of inputs when counterexample was found: [106]
+Number of tests when counterexample was found: [17]
+Time (ms) when counterexample was found: [835910]

@@ -579,10 +579,10 @@ class AliveNode:
         self.aps_seq = 1
         self.sec_nwk_fc: int = 0x01000000
         self.sec_aps_fc: int = 0x01000000
-        self.chosen_pan = None
-        self.src_short = None
+        self.chosen_pan = 0xFFFF
+        self.src_short = 0xFFFE
         self.src_ieee = 0x79bc000000010003
-        self.dest_short = 0x0000
+        self.dest_short = 0xFFFF
         self.dest_ieee = 0x6c63696c63696c63
         self.cap = 0x8E
         self.zdo_tsn = 0
@@ -908,7 +908,10 @@ class AliveNode:
         self.radio.inject_air_frame_with_meta(bytes(pkt), True)
 
     def try_assoc(self):
+        self.radio.enable_raw()
+        sleep(10)
         frame = build_assoc_request_raw(pan_id=self.chosen_pan, dest_short=self.dest_short, src_ieee=self.src_ieee, mac_seq=self.mac_seq & 0xFF)
+        print(bytes(frame).hex())
         self.mac_seq += 1
         self.radio.inject_air_frame_with_meta(bytes(frame))
         print(f"Sent AssocReq --> PAN=0x{self.chosen_pan:04X}, coord=0x{self.dest_short}")
@@ -1178,8 +1181,8 @@ class AliveNode:
             if isinstance(pkt, Dot15d4FCS) and getattr(pkt, "fcf_frametype", None) == 0 and not self.associated and not self.trying_association:
                 if getattr(pkt, "sf_assocpermit", None) == True and self.chosen_pan == None:
                     # Beacon frame
-                    self.chosen_pan = getattr(pkt, "src_panid", None)
-                    self.dest_short = getattr(pkt, "src_addr", None)
+                    self.chosen_pan = getattr(pkt, "src_panid", self.chosen_pan)
+                    self.dest_short = getattr(pkt, "src_addr", self.dest_short)
                     if self.chosen_pan is None:
                         # Fallback to raw heuristic if needed
                         if len(raw) >= 2 and raw[0:2] == b"\x00\x80":
@@ -1198,6 +1201,8 @@ class AliveNode:
             if pkt.haslayer(Dot15d4Cmd) and pkt[Dot15d4Cmd].cmd_id == 0x02:
                 self.associated = True
                 self.trying_association = False
+                self.chosen_pan = 0x6963
+                self.dest_short = 0x0000
                 # self.chosen_pan = getattr(pkt, "src_panid", self.chosen_pan)
                 self.src_short = getattr(pkt, "short_address", self.src_short)
                 print(f"[+] Association Response spotted. Marked associated with PAN_ID=0x{self.chosen_pan:04X}")
@@ -1288,7 +1293,7 @@ class AliveNode:
         if not self.radio.wait_connect(15.0):
             raise TimeoutError("Zigbee stack did not connect in time")
 
-        self.send_beacon_request()
+        self.try_assoc()
         self.rx_loop()
 
 if __name__ == "__main__":

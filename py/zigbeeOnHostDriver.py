@@ -483,7 +483,7 @@ class zigbeeOnHostDriver:
 
 if __name__ == '__main__':
     driver = zigbeeOnHostDriver(
-            restart_cmd=["/bin/bash", "/home/elizabeth/Coding/Thesis/zigbee-fuzzer/py/restartStack.sh"],
+            restart_cmd=["/bin/bash", "/home/eliza/Coding/Thesis/zigbee-fuzzer/py/restartStack.sh"],
             restart_on_reset=True,
             restart_on_disconnect=True,
             restart_cooldown_s=2.0

@@ -269,7 +269,6 @@ PACKET_TEMPLATES = {
                                                         src_addr=self.config["short_address"]
                                                     )/ ZigbeeNWK(
                                                         frametype = 0,
-        #     print(f"Handler name: {handler_name}")
                                                         destination=self.config["coord_addr"],
                                                         source=self.config["short_address"],
                                                         radius=30,
@@ -320,7 +319,39 @@ PACKET_TEMPLATES = {
                                                     / ZigbeeSecurityHeader()
                                                     / ZigbeeAppCommandPayload(cmd_identifier = 15),
 
-    'APS_VERIFY_KEY':                  lambda self: Dot15d4FCS(
+    'APS_VERIFY_TC_LINK_KEY':                  lambda self: Dot15d4FCS(
+                                                        fcf_frametype = 1,
+                                                        fcf_security=0,
+                                                        fcf_ackreq=1,
+                                                        fcf_panidcompress=1,
+                                                        fcf_destaddrmode=2,
+                                                        fcf_srcaddrmode=2,
+                                                        seqnum=self.sequence_numbers["mac_seq"] & 0xFF
+                                                    )/ Dot15d4Data(
+                                                        dest_panid=self.config["pan_id"],
+                                                        dest_addr=self.config["coord_addr"],
+                                                        src_addr=self.config["short_address"]
+                                                    )/ ZigbeeNWK(
+                                                        frametype = 0,
+                                                        destination=self.config["coord_addr"],
+                                                        flags='extended_src',
+                                                        source=self.config["short_address"],
+                                                        ext_src=self.config["ieee_address"],
+                                                        radius=30,
+                                                        seqnum=self.sequence_numbers["nwk_seq"] & 0xFF
+                                                    )/ ZigbeeAppDataPayload(
+                                                        aps_frametype=1,
+                                                        delivery_mode=0,
+                                                        frame_control=6,
+                                                        counter=self.sequence_numbers["aps_seq"] & 0xFF
+                                                    )/ ZigbeeAppCommandPayload(
+                                                        key_type=0x04,
+                                                        address=self.config["ieee_address"],
+                                                        cmd_identifier=0x0F,
+                                                        key_hash=0
+                                                    ),
+
+    'APS_VERIFY_GLOBAL_KEY':                  lambda self: Dot15d4FCS(
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,

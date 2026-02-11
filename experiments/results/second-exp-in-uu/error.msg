@@ -1,0 +1,15 @@
+Index 1 out of bounds for length 1
+java.lang.IndexOutOfBoundsException: Index 1 out of bounds for length 1
+	at net.automatalib.common.util.array.ArrayStorage.get(ArrayStorage.java:134)
+	at de.learnlib.acex.AbstractBaseCounterexample.effect(AbstractBaseCounterexample.java:47)
+	at de.learnlib.algorithm.ttt.base.AbstractTTTLearner.splitState(AbstractTTTLearner.java:299)
+	at de.learnlib.algorithm.ttt.base.AbstractTTTLearner.refineHypothesisSingle(AbstractTTTLearner.java:240)
+	at de.learnlib.algorithm.ttt.mealy.TTTLearnerMealy.refineHypothesisSingle(TTTLearnerMealy.java:92)
+	at de.learnlib.algorithm.ttt.base.AbstractTTTLearner.refineHypothesis(AbstractTTTLearner.java:173)
+	at com.github.protocolfuzzing.protocolstatefuzzer.statefuzzer.core.StateFuzzerStandard.inferStateMachine(StateFuzzerStandard.java:165)
+	at com.github.protocolfuzzing.protocolstatefuzzer.statefuzzer.core.StateFuzzerStandard.startFuzzing(StateFuzzerStandard.java:84)
+	at com.github.protocolfuzzing.protocolstatefuzzer.entrypoints.CommandLineParser.executeCommand(CommandLineParser.java:355)
+	at com.github.protocolfuzzing.protocolstatefuzzer.entrypoints.CommandLineParser.parseAndExecuteCommand(CommandLineParser.java:226)
+	at com.github.protocolfuzzing.protocolstatefuzzer.entrypoints.CommandLineParser.parse(CommandLineParser.java:168)
+	at com.github.protocolfuzzing.protocolstatefuzzer.entrypoints.CommandLineParser.parse(CommandLineParser.java:199)
+	at com.github.protocolfuzzing.zigbeefuzzer.Main.main(Main.java:19)

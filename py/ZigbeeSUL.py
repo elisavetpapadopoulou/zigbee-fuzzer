@@ -8,6 +8,7 @@ import time
 from ZigbeeEncryption import decode_all
 from zigbeeOnHostDriver import zigbeeOnHostDriver
 
+#TODO: Why is Association Request replied to even when I don't know the coordinator' short address yet?'
 class ZigbeeSUL:
     def __init__(self, serial_port, target_mac=0x0000, ):
         self.driver = zigbeeOnHostDriver(
@@ -25,10 +26,10 @@ class ZigbeeSUL:
             "coord_addr": 0xFFFF,
             #TODO: Save the coordinator's IEEE address dynamically
             "coord_ieee": 0x6c63696c63696c63,
-            "short_address": 0x0000,
+            "short_address": 0xFFFE,
             "ieee_address": 0x79bc000000010002,
             "tc_global_key": bytes([90,105,103,66,101,101,65,108,108,105,97,110,99,101,48,57]),
-            "tc_link_key": 0,
+            "tc_link_key": bytes([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
             "network_key": {}
         }
         self.sequence_numbers = {
@@ -48,11 +49,13 @@ class ZigbeeSUL:
     def pre(self, timeout_s=15.0):
         try:
             self.reset()
+            print("First connection attempt...")
             if not getattr(self, "_srv_th", None):
                 self._srv_th = threading.Thread(target=self.driver.serve_once, daemon=True)
                 self._srv_th.start()
-                time.sleep(7)
-            self.driver._restart_stack("manual-start")
+                time.sleep(10)
+            else:
+                self.driver._run_restart_cmd("manual-start")
             if not self.driver.wait_connect(timeout_s):
                 raise TimeoutError("Zigbee stack did not connect in time")
             self.driver.wait_ready(15)
@@ -88,7 +91,7 @@ class ZigbeeSUL:
             pre_handler = getattr(self, handler_name, None)
             print(f"Pre handler name: {pre_handler}")
             if callable(pre_handler):
-                (pkt, input_symbol) = (pkt, input_symbol)
+                pkt, input_symbol = pre_handler(pkt, input_symbol)
 
             self.send(pkt)
             output_pkts = self.receive(pkt)
@@ -188,7 +191,7 @@ class ZigbeeSUL:
         self.config.update({
             "pan_id": 0xFFFF,
             "coord_addr": 0xFFFF,
-            "short_address": 0x0000,
+            "short_address": 0xFFFE,
             "tc_link_key": 0,
             "network_key": {}
         })
@@ -239,7 +242,6 @@ class ZigbeeSUL:
                 sym = "APS_ACK"
 
 
-
         if ZigbeeNWK in pkt and ZigbeeNWKCommandPayload in pkt:
             nwk_cmd = pkt[ZigbeeNWKCommandPayload]
             cmd_id = int(getattr(nwk_cmd, "cmd_identifier", -1))
@@ -272,7 +274,11 @@ class ZigbeeSUL:
         association_permit = getattr(pkt, "sf_assocpermit", None)
         return sym+f"(assoc_permit={association_permit})"
 
+    #TODO: For some reason association succeeds without definition of specific pan_id and coordinator address, need to check if this is expected behavior or if there's some issue with the way I'm handling the association response
     def _h_mac_association_response(self, pkt, sym):
+        if self.config["pan_id"] == 0xFFFF:
+            self.config["pan_id"] = 0x6963
+            self.config["coord_addr"] = 0x0000
         status = getattr(pkt, "association_status", None)
         if status == 0x00:
             self.config["short_address"] = getattr(pkt, "short_address", -1)
@@ -292,6 +298,7 @@ class ZigbeeSUL:
             key_bytes = bytes(getattr(aps_cmd, "key", b""))
             if key_bytes:
                 self.network_secured = True
+                print("Network is now secured!")
                 self.config["network_key"][aps_cmd.key_seqnum] = key_bytes
                 return sym+f"(nwk_key={self.config["network_key"]})"
             return sym+"(nwk_key=no-key)"
@@ -299,6 +306,7 @@ class ZigbeeSUL:
             sym = "APS_CMD_TRANSPORT_TC_LINK_KEY"
             key_bytes = bytes(getattr(aps_cmd, "key", b""))
             if key_bytes:
+                print("TC Link Key set to:", key_bytes.hex())
                 self.config["tc_link_key"] = key_bytes
                 return sym+f"(tc_link_key={self.config["tc_link_key"]})"
             return sym+"(tc_link_key=no-key)"
@@ -351,6 +359,7 @@ class ZigbeeSUL:
         return pkt, input_symbol
 
     def mac_association_request_pre(self, pkt, input_symbol):
+        print(pkt.show2())
         return pkt, input_symbol
 
     def mac_data_request_pre(self, pkt, input_symbol):
@@ -381,6 +390,7 @@ class ZigbeeSUL:
         return pkt, input_symbol
 
     def aps_request_key_pre(self, pkt, input_symbol):
+        print("Request Key - Pre Handler")
         frame, aps_bytes = aps_encrypt(self, pkt)
         if self.network_secured:
             pkt = nwk_encrypt(self, frame, aps_bytes)
@@ -394,13 +404,20 @@ class ZigbeeSUL:
 
 
     #TODO: Check that this hash assignment works
-    def aps_verify_key_pre(self, pkt, input_symbol):
-        if self.config["tc_link_key"] != 0 :
-            verify_hash = zigbee_hmac(self, b"\x03", self.config["tc_link_key"])
-            input_symbol = input_symbol+"_WITH_TC_LINK_KEY"
-        else:
-            verify_hash = zigbee_hmac(self, b"\x03", self.config["tc_global_key"])
-            input_symbol = input_symbol+"_WITH_TC_GLOBAL_KEY"
+    def aps_verify_tc_link_key_pre(self, pkt, input_symbol):
+        if (self.config["tc_link_key"]) == 0:
+            print("TC Link Key not set, skipping hash assignment")
+            return pkt, input_symbol
+        verify_hash = zigbee_hmac(self, b"\x03", self.config["tc_link_key"])
+        input_symbol = input_symbol+"_WITH_TC_LINK_KEY"
+        pkt[ZigbeeAppCommandPayload].key_hash = verify_hash
+        frame, _ = aps_encrypt(self, pkt)
+        return frame, input_symbol
+
+    def aps_verify_global_key_pre(self, pkt, input_symbol):
+        verify_hash = zigbee_hmac(self, b"\x03", self.config["tc_global_key"])
+        input_symbol = input_symbol+"_WITH_TC_GLOBAL_KEY"
+        print(input_symbol)
         pkt[ZigbeeAppCommandPayload].key_hash = verify_hash
         frame, _ = aps_encrypt(self, pkt)
         return frame, input_symbol
@@ -413,7 +430,7 @@ class ZigbeeSUL:
             input_symbol = input_symbol+"_ENCRYPTED"
         else:
             input_symbol = input_symbol+"_PLAIN"
-        return pkt
+        return pkt, input_symbol
 
     def nwk_rejoin_request_tc_pre(self, pkt, input_symbol):
         # self.network_secured = False
