@@ -84,7 +84,7 @@ def rebuild_plain_nwk(pkt, plaintext: bytes):
 def rebuild_plain_aps(pkt, plaintext: bytes):
     """
     Return a new packet:
-      Dot15d4 / NWK / APS(with security bit cleared) / <decrypted layer>
+      Dot15d4FCS / NWK / APS(with security bit cleared) / <decrypted layer>
     """
     mac = pkt[Dot15d4FCS].copy()
     mac.remove_payload()
@@ -108,6 +108,7 @@ def rebuild_plain_aps(pkt, plaintext: bytes):
 
 def aps_encrypt(self, pkt):
     # Force APS header bits (visible)
+    print("Unencrypted APS payload: ", bytes(pkt).hex(), " (len=", len(bytes(pkt)), ")")
     aps = pkt[ZigbeeAppDataPayload]
     aps.aps_frametype = 1
     aps.delivery_mode = 0
@@ -135,6 +136,7 @@ def aps_encrypt(self, pkt):
     aad   = aps_hdr_b + bytes([sec_fixed]) + fc_le + src_le
 
     if self.config["tc_link_key"] != 0:
+        print("HURRAY!! Using TC Link Key for APS encryption")
         tc_key = self.config["tc_link_key"]
     else:
         tc_key = self.config["tc_global_key"]
@@ -145,7 +147,7 @@ def aps_encrypt(self, pkt):
     U = ccm.digest()
 
     # On-wire APS aux (extnonce=1 → include src EUI)
-    aps_aux_b = bytes([sec_wire]) + fc_le + src_le
+    aps_aux_b = bytes([sec_fixed]) + fc_le + src_le
 
     # Exact APS PDU bytes: APS header || APS aux || C || U
     aps_pdu_bytes = aps_hdr_b + aps_aux_b + C + U
@@ -189,7 +191,7 @@ def nwk_encrypt(self, pkt, aps_pdu_bytes):
 
     # On-wire NWK aux (wire SecCtrl + FC + src + key index)
     # nwk_aux_b = bytes([sec_wire]) + fc_le + src_le + bytes([key_seqnum & 0xFF])
-    nwk_aux_b = struct.pack("<B I Q B", sec_wire, self.sequence_numbers["sec_nwk_fc"], int(my_eui64), key_seqnum & 0xFF)
+    nwk_aux_b = struct.pack("<B I Q B", sec_fixed, self.sequence_numbers["sec_nwk_fc"], int(my_eui64), key_seqnum & 0xFF)
 
 
     frame = mac / ll / nwk / Raw(nwk_aux_b + C + U)
@@ -372,6 +374,8 @@ def zigbee_mmo_hash(self, message):
 
 
 def decode_all(self, pkt):
+    print("[*] Attempting to decode packet with security header...")
+    print(bytes(pkt).hex())
     for _ in range(2):
         owner = _sec_owner(pkt)
         if owner is None:

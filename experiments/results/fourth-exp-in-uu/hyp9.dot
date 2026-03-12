@@ -1,0 +1,184 @@
+digraph g {
+
+	s0 [shape="circle" label="s0"];
+	s1 [shape="circle" label="s1"];
+	s2 [shape="circle" label="s2"];
+	s3 [shape="circle" label="s3"];
+	s4 [shape="circle" label="s4"];
+	s5 [shape="circle" label="s5"];
+	s6 [shape="circle" label="s6"];
+	s7 [shape="circle" label="s7"];
+	s8 [shape="circle" label="s8"];
+	s9 [shape="circle" label="s9"];
+	s10 [shape="circle" label="s10"];
+	s11 [shape="circle" label="s11"];
+	s12 [shape="circle" label="s12"];
+// s0 ----------------------------> UNASSOCIATED 
+	s0 -> s0 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s0 -> s1 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s0 -> s0 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s0 -> s0 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s0 -> s0 [label="ZDO_NODE_DESCRIPTOR_REQUEST / EMPTYRESPONSE"];
+	s0 -> s0 [label="NWK_REJOIN_REQUEST_TC / EMPTYRESPONSE"];
+	s0 -> s0 [label="NWK_REJOIN_REQUEST_SECURE / EMPTYRESPONSE"];
+	s0 -> s0 [label="APS_REQUEST_KEY / EMPTYRESPONSE"];
+	s0 -> s0 [label="APS_VERIFY_TC_LINK_KEY / EMPTYRESPONSE"];
+	s0 -> s0 [label="APS_VERIFY_GLOBAL_KEY / EMPTYRESPONSE"];
+// s1 ----------------------------> ASSOCIATED 
+	s1 -> s0 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s1 -> s1 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s1 -> s2 [label="MAC_DATA_REQUEST / APS_CMD_TRANSPORT_NWK_KEY(nwk_key={0: b'\\x01\\x03\\x05\\x07\\t\\x0b\\r\\x0f\\x00\\x02\\x04\\x06\\x08\\n\\x0c\\r'})"];
+	s1 -> s0 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s1 -> s0 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s1 -> s0 [label="ZDO_NODE_DESCRIPTOR_REQUEST / EMPTYRESPONSE"];
+	s1 -> s0 [label="NWK_REJOIN_REQUEST_TC / EMPTYRESPONSE"];
+	s1 -> s0 [label="NWK_REJOIN_REQUEST_SECURE / EMPTYRESPONSE"];
+	s1 -> s0 [label="APS_REQUEST_KEY / EMPTYRESPONSE"];
+	s1 -> s0 [label="APS_VERIFY_TC_LINK_KEY / EMPTYRESPONSE"];
+	s1 -> s0 [label="APS_VERIFY_GLOBAL_KEY / EMPTYRESPONSE"];
+// s2 ----------------------------> JOINED 
+	s2 -> s2 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s2 -> s4 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s2 -> s2 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s2 -> s5 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s2 -> s2 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s2 -> s3 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s2 -> s2 [label="NWK_REJOIN_REQUEST_TC / NWK_REJOIN_RESPONSE_FAILURE(status=2)"];
+	s2 -> s2 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s2 -> s7 [label="APS_REQUEST_KEY / APS_CMD_TRANSPORT_TC_LINK_KEY(tc_link_key=b'ZigBeeAlliance09')"];
+	s2 -> s2 [label="APS_VERIFY_TC_LINK_KEY / APS_ACK"];
+	s2 -> s6 [label="APS_VERIFY_GLOBAL_KEY / APS_CONFIRM_KEY(status=0)"];
+// s3 ----------------------------> JOINED sub-state (ZDO Node Descriptor Response noise?)
+	s3 -> s2 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s3 -> s4 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s3 -> s2 [label="MAC_DATA_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE+ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s3 -> s5 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s3 -> s2 [label="ZDO_DEVICE_ANNOUNCE / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s3 -> s3 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s3 -> s2 [label="NWK_REJOIN_REQUEST_TC / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s3 -> s2 [label="NWK_REJOIN_REQUEST_SECURE / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s3 -> s2 [label="APS_REQUEST_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s3 -> s2 [label="APS_VERIFY_TC_LINK_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s3 -> s6 [label="APS_VERIFY_GLOBAL_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	// !! s4 looks similar to s2
+// s4 ----------------------------> JOINED + re-ASSOCIATED + re-JOINED (mac association requests seem to fall here after the device has joined)
+	s4 -> s2 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s4 -> s4 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s4 -> s2 [label="MAC_DATA_REQUEST / APS_CMD_TRANSPORT_NWK_KEY(nwk_key={0: b'\\x01\\x03\\x05\\x07\\t\\x0b\\r\\x0f\\x00\\x02\\x04\\x06\\x08\\n\\x0c\\r'})"];
+	s4 -> s5 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s4 -> s2 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s4 -> s3 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s4 -> s2 [label="NWK_REJOIN_REQUEST_TC / NWK_REJOIN_RESPONSE_FAILURE(status=2)"];
+	s4 -> s2 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s4 -> s7 [label="APS_REQUEST_KEY / APS_CMD_TRANSPORT_TC_LINK_KEY(tc_link_key=b'ZigBeeAlliance09')"];
+	s4 -> s2 [label="APS_VERIFY_TC_LINK_KEY / APS_ACK"];
+	s4 -> s6 [label="APS_VERIFY_GLOBAL_KEY / APS_CONFIRM_KEY(status=0)"];
+	// !! s5 also looks rather similar to s2 (joined)
+// s5 ----------------------------> JOINED (disassociation pit?)
+	s5 -> s5 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s5 -> s4 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s5 -> s5 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s5 -> s5 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s5 -> s5 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s5 -> s5 [label="ZDO_NODE_DESCRIPTOR_REQUEST / EMPTYRESPONSE"];
+	s5 -> s5 [label="NWK_REJOIN_REQUEST_TC / EMPTYRESPONSE"];
+	s5 -> s2 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s5 -> s5 [label="APS_REQUEST_KEY / EMPTYRESPONSE"];
+	s5 -> s5 [label="APS_VERIFY_TC_LINK_KEY / EMPTYRESPONSE"];
+	s5 -> s5 [label="APS_VERIFY_GLOBAL_KEY / EMPTYRESPONSE"];
+// s6 ----------------------------> AUTHENTICATED (global key verified)
+	s6 -> s6 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s6 -> s6 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s6 -> s6 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s6 -> s5 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s6 -> s6 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s6 -> s11 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s6 -> s6 [label="NWK_REJOIN_REQUEST_TC / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s6 -> s6 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s6 -> s10 [label="APS_REQUEST_KEY / APS_CMD_TRANSPORT_TC_LINK_KEY(tc_link_key=b'ZigBeeAlliance09')"];
+	s6 -> s6 [label="APS_VERIFY_TC_LINK_KEY / APS_ACK"];
+	s6 -> s6 [label="APS_VERIFY_GLOBAL_KEY / APS_CONFIRM_KEY(status=0)"];
+
+// s7 -> s8 -> s9 is a small association-join path after the tc link key is retrieved and before it is verified
+// s7 ----------------------------> TC LINK KEY RETRIEVED 
+	s7 -> s7 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s7 -> s9 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s7 -> s7 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s7 -> s8 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s7 -> s7 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s7 -> s12 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s7 -> s7 [label="NWK_REJOIN_REQUEST_TC / NWK_REJOIN_RESPONSE_FAILURE(status=2)"];
+	s7 -> s7 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s7 -> s7 [label="APS_REQUEST_KEY / APS_CMD_TRANSPORT_TC_LINK_KEY(tc_link_key=b'ZigBeeAlliance09')"];
+	s7 -> s10 [label="APS_VERIFY_TC_LINK_KEY / APS_CONFIRM_KEY(status=0)"];
+	s7 -> s10 [label="APS_VERIFY_GLOBAL_KEY / APS_CONFIRM_KEY(status=0)"];
+	// !! another disassociation pit, like s5
+// s8 ----------------------------> JOINED but not authenticated (disassociation pit?)
+	s8 -> s8 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s8 -> s9 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s8 -> s8 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s8 -> s8 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s8 -> s8 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s8 -> s8 [label="ZDO_NODE_DESCRIPTOR_REQUEST / EMPTYRESPONSE"];
+	s8 -> s8 [label="NWK_REJOIN_REQUEST_TC / EMPTYRESPONSE"];
+	s8 -> s7 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s8 -> s8 [label="APS_REQUEST_KEY / EMPTYRESPONSE"];
+	s8 -> s8 [label="APS_VERIFY_TC_LINK_KEY / EMPTYRESPONSE"];
+	s8 -> s8 [label="APS_VERIFY_GLOBAL_KEY / EMPTYRESPONSE"];
+// s9 ----------------------------> TC LINK KEY RETRIEVED 
+	s9 -> s7 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s9 -> s9 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s9 -> s7 [label="MAC_DATA_REQUEST / APS_CMD_TRANSPORT_NWK_KEY(nwk_key={0: b'\\x01\\x03\\x05\\x07\\t\\x0b\\r\\x0f\\x00\\x02\\x04\\x06\\x08\\n\\x0c\\r'})"];
+	s9 -> s8 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s9 -> s7 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s9 -> s12 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s9 -> s7 [label="NWK_REJOIN_REQUEST_TC / NWK_REJOIN_RESPONSE_FAILURE(status=2)"];
+	s9 -> s7 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s9 -> s7 [label="APS_REQUEST_KEY / APS_CMD_TRANSPORT_TC_LINK_KEY(tc_link_key=b'ZigBeeAlliance09')"];
+	s9 -> s10 [label="APS_VERIFY_TC_LINK_KEY / APS_CONFIRM_KEY(status=0)"];
+	s9 -> s10 [label="APS_VERIFY_GLOBAL_KEY / APS_CONFIRM_KEY(status=0)"];
+// s10 ----------------------------> AUTHENTICATED (tc link key verified) 
+	s10 -> s10 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s10 -> s10 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s10 -> s10 [label="MAC_DATA_REQUEST / EMPTYRESPONSE"];
+	s10 -> s8 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s10 -> s10 [label="ZDO_DEVICE_ANNOUNCE / EMPTYRESPONSE"];
+	s10 -> s11 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s10 -> s10 [label="NWK_REJOIN_REQUEST_TC / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s10 -> s10 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS(status=0)"];
+	s10 -> s10 [label="APS_REQUEST_KEY / APS_CMD_TRANSPORT_TC_LINK_KEY(tc_link_key=b'ZigBeeAlliance09')"];
+	s10 -> s10 [label="APS_VERIFY_TC_LINK_KEY / APS_CONFIRM_KEY(status=0)"];
+	s10 -> s10 [label="APS_VERIFY_GLOBAL_KEY / APS_CONFIRM_KEY(status=0)"];
+
+
+	// !! s11, s12 to be analysed
+// s11 ----------------------------> ZDO Node Descriptor Response noise?  
+	s11 -> s6 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s11 -> s6 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s11 -> s6 [label="MAC_DATA_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE+ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s11 -> s5 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s11 -> s6 [label="ZDO_DEVICE_ANNOUNCE / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s11 -> s11 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s11 -> s6 [label="NWK_REJOIN_REQUEST_TC / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s11 -> s6 [label="NWK_REJOIN_REQUEST_SECURE / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s11 -> s6 [label="APS_REQUEST_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s11 -> s6 [label="APS_VERIFY_TC_LINK_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s11 -> s6 [label="APS_VERIFY_GLOBAL_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+// s12 ----------------------------> ZDO Node Descriptor Response noise?  
+	s12 -> s7 [label="MAC_BEACON_REQUEST / MAC_BEACON(assoc_permit=1)"];
+	s12 -> s9 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s12 -> s7 [label="MAC_DATA_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE+ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s12 -> s8 [label="MAC_DISASSOCIATION_NOTIFY / EMPTYRESPONSE"];
+	s12 -> s7 [label="ZDO_DEVICE_ANNOUNCE / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s12 -> s12 [label="ZDO_NODE_DESCRIPTOR_REQUEST / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s12 -> s7 [label="NWK_REJOIN_REQUEST_TC / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s12 -> s7 [label="NWK_REJOIN_REQUEST_SECURE / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s12 -> s7 [label="APS_REQUEST_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s12 -> s10 [label="APS_VERIFY_TC_LINK_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+	s12 -> s10 [label="APS_VERIFY_GLOBAL_KEY / ZDO_NODE_DESCRIPTOR_RESPONSE"];
+
+__start0 [label="" shape="none" width="0" height="0"];
+__start0 -> s0;
+
+}

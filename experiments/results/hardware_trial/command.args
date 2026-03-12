@@ -1,0 +1,14 @@
+state-fuzzer-server
+-output
+experiments/results/hardware_trial
+-alphabet
+experiments/alphabets/association-nwkEntering.xml
+-equivalenceQueryBound
+5000
+-logQueries
+-adapter
+/dev/ttyACM0
+-connect
+EB:D8:6B:33:90:0B
+-ceReruns
+3

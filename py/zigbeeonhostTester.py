@@ -424,7 +424,7 @@ def build_aps_request_key(pan_id, dst_short, src_short, src_ieee,
             key_type=key_type
         )
 
-def build_zdo_node_descriptor_request(pan_id, src_short, aps_ctr, mac_seq, nwk_seq, zdo_tsn, target_nwk):
+def build_zdo_node_descriptor_request(pan_id, src_ieee, src_short, aps_ctr, mac_seq, nwk_seq, zdo_tsn, target_nwk):
     return (
         Dot15d4FCS(
             fcf_frametype=1,
@@ -432,16 +432,18 @@ def build_zdo_node_descriptor_request(pan_id, src_short, aps_ctr, mac_seq, nwk_s
             fcf_ackreq=1,
             fcf_panidcompress=1,
             fcf_destaddrmode=2,
-            fcf_srcaddrmode=2,
+            fcf_srcaddrmode=3,
             seqnum=mac_seq
         )/ Dot15d4Data(
             dest_panid=pan_id,
             dest_addr=target_nwk,
-            src_addr=src_short
+            src_addr=src_ieee
         )/ ZigbeeNWK(
             frametype=0,
+            flags=['extended_src'],
             destination=target_nwk,
             source=src_short,
+            ext_src=0x79bc000000010004,
             radius=30,
             seqnum=(nwk_seq + 1) & 0xFF
         )/ ZigbeeAppDataPayload(
@@ -579,11 +581,11 @@ class AliveNode:
         self.aps_seq = 1
         self.sec_nwk_fc: int = 0x01000000
         self.sec_aps_fc: int = 0x01000000
-        self.chosen_pan = 0xFFFF
-        self.src_short = 0xFFFE
-        self.src_ieee = 0x79bc000000010003
-        self.dest_short = 0xFFFF
-        self.dest_ieee = 0x6c63696c63696c63
+        self.chosen_pan = 0x6963
+        self.src_short = 0x69b2
+        self.src_ieee = 0x79bc000000010004
+        self.dest_short = 0x0000
+        self.dest_ieee = 0x6c63696c63696c64
         self.cap = 0x8E
         self.zdo_tsn = 0
         self.seen_rreq = set()
@@ -1008,19 +1010,21 @@ class AliveNode:
         print("[TX] Network Route Reply")
 
     def zdo_node_descriptor_request(self):
-        pkt = build_zdo_node_descriptor_request(pan_id=self.chosen_pan, src_short=self.src_short, aps_ctr=self.aps_seq, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq, zdo_tsn=self.zdo_tsn, target_nwk=0x0000)
-        key_seqnum = next(reversed(self.nwk_key))
-        nwk_key = self.nwk_key[key_seqnum]
-        frame = self.nwk_encrypt(pkt, key_seqnum, nwk_key, self.src_ieee, bytes(pkt[ZigbeeAppDataPayload]))
+        self.radio.enable_raw()
+        sleep(10)
+        pkt = build_zdo_node_descriptor_request(pan_id=self.chosen_pan, src_ieee=self.src_ieee, src_short=self.src_short, aps_ctr=self.aps_seq, mac_seq=self.mac_seq, nwk_seq=self.nwk_seq, zdo_tsn=self.zdo_tsn, target_nwk=0x0000)
+        # key_seqnum = next(reversed(self.nwk_key))
+        # nwk_key = self.nwk_key[key_seqnum]
+        # frame = self.nwk_encrypt(pkt, key_seqnum, nwk_key, self.src_ieee, bytes(pkt[ZigbeeAppDataPayload]))
         self.mac_seq = (self.mac_seq + 1) & 0xFF
         self.nwk_seq = (self.nwk_seq + 1) & 0xFF
         self.aps_seq = (self.aps_seq + 1) & 0xFF
         self.zdo_tsn = (self.zdo_tsn + 1) & 0xFF
         self.sec_nwk_fc += 1
-        self.radio.inject_air_frame_with_meta(bytes(frame))
+        self.radio.inject_air_frame_with_meta(bytes(pkt))
         print("[TX] ZDO Node Descriptor Request")
         pkt.show2()
-        frame.show2()
+        # frame.show2()
         for i in range(3):
             self.pull_assoc(self.chosen_pan, self.dest_short)
             sleep(5)
@@ -1207,7 +1211,8 @@ class AliveNode:
                 self.src_short = getattr(pkt, "short_address", self.src_short)
                 print(f"[+] Association Response spotted. Marked associated with PAN_ID=0x{self.chosen_pan:04X}")
 
-                self.pull_assoc(self.chosen_pan, self.dest_short)
+                self.zdo_node_descriptor_request()
+                # self.pull_assoc(self.chosen_pan, self.dest_short)
                 # self.zdo_device_announce()
                 # self.announcing = True
                 # sleep(10)
@@ -1293,7 +1298,7 @@ class AliveNode:
         if not self.radio.wait_connect(15.0):
             raise TimeoutError("Zigbee stack did not connect in time")
 
-        self.try_assoc()
+        self.zdo_node_descriptor_request()
         self.rx_loop()
 
 if __name__ == "__main__":

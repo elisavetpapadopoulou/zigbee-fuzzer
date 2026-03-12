@@ -53,12 +53,13 @@ class ZigbeeSUL:
             if not getattr(self, "_srv_th", None):
                 self._srv_th = threading.Thread(target=self.driver.serve_once, daemon=True)
                 self._srv_th.start()
-                time.sleep(10)
+                time.sleep(7)
             else:
                 self.driver._run_restart_cmd("manual-start")
             if not self.driver.wait_connect(timeout_s):
                 raise TimeoutError("Zigbee stack did not connect in time")
-            self.driver.wait_ready(15)
+            self.driver.wait_ready(7)
+            time.sleep(1)
             self.primed = True
         except Exception as e:
             print(traceback.format_exc())
@@ -77,15 +78,29 @@ class ZigbeeSUL:
     def post(self):
         pass
 
+    def increment_counters(self, pkt):
+        # Increment the correct counters AFTER crafting the packet
+        if pkt.haslayer(Dot15d4FCS):
+            self.sequence_numbers["mac_seq"] =  (self.sequence_numbers["mac_seq"] + 1) & 0xFF
+        if pkt.haslayer(ZigbeeNWK):
+            self.sequence_numbers["nwk_seq"] = (self.sequence_numbers["nwk_seq"] + 1) & 0xFF
+        if pkt.haslayer(ZigbeeAppCommandPayload) or pkt.haslayer(ZigbeeAppDataPayload):
+            self.sequence_numbers["aps_seq"] = (self.sequence_numbers["aps_seq"] + 1) & 0xFF
+
+
     def step_internal(self, input_symbol):
         pkt = self.packets[input_symbol](self)
+
+        self.increment_counters(pkt)
+
         if not pkt:
             return "TIMEOUT"
+
         # Just bypassing some specific frames
         if hasattr(self, input_symbol.lower()):
             output_symbol = getattr(self, input_symbol.lower())(pkt)
-        else:
 
+        else:
             ident = input_symbol.lower()
             handler_name = f"{ident}_pre"
             pre_handler = getattr(self, handler_name, None)
@@ -93,17 +108,23 @@ class ZigbeeSUL:
             if callable(pre_handler):
                 pkt, input_symbol = pre_handler(pkt, input_symbol)
 
-            self.send(pkt)
+            self.send(pkt, input_symbol)
             output_pkts = self.receive(pkt)
 
             # TODO: Let's see if we're gonna use this one in the end
             if hasattr(self, input_symbol.lower() + '_post'):
                 output_pkts = getattr(self, input_symbol.lower() + '_post')(input_symbol, pkt, output_pkts)
 
-            pkt = Dot15d4FCS(bytes(pkt))
             output_symbol = self.format_output(output_pkts)
 
-            assert(isinstance(pkt, Packet))
+            # Poll for response if the input pkt is supposed to be polled to return a response
+            if output_symbol == "EMPTYRESPONSE":
+                if input_symbol not in ["MAC_BEACON_REQUEST", "MAC_DATA_REQUEST", "APS_REQUEST_NWK_KEY"]:
+                    poll = self.packets["MAC_DATA_REQUEST"](self)
+                    self.increment_counters(poll)
+                    self.send(poll, "MAC_DATA_REQUEST")
+                    output_pkts = self.receive(poll)
+                    output_symbol = self.format_output(output_pkts)
 
         self.input_sequence.append(input_symbol)
         self.output_sequence.append(output_symbol)
@@ -113,13 +134,13 @@ class ZigbeeSUL:
 
         return output_symbol
 
-    def send(self, pkt):
+    def send(self, pkt, input_symbol):
         print(f"TX ---> {pkt.summary()}")
         # print(f"TX ---> {bytes(pkt).hex()}")
         self.driver.inject_air_frame_with_meta(bytes(pkt))
 
 
-    def receive(self, pkt, max_pkts=1, timeout=7.0):
+    def receive(self, pkt, max_pkts=1, timeout=6.0):
         packets = []
         time_start = time.time()
         time_now = time_start
@@ -145,7 +166,7 @@ class ZigbeeSUL:
                 if time_now - time_start > timeout:
                     break
                 continue
-            time.sleep(0.5)
+            #time.sleep(0.5)
             time_now = time.time()
             if time_now - time_start > timeout:
                 break
@@ -164,12 +185,7 @@ class ZigbeeSUL:
 
         entries = []
         for output_pkt in output_pkts:
-            if output_pkt.haslayer(Dot15d4FCS):
-                self.sequence_numbers["mac_seq"] = (getattr(output_pkt, "seqnum", self.sequence_numbers["mac_seq"]) + 1) & 0xFF
-            if output_pkt.haslayer(ZigbeeNWK):
-                self.sequence_numbers["nwk_seq"] = (getattr(output_pkt, "nwk_seq", self.sequence_numbers["nwk_seq"]) + 1) & 0xFF
-            if output_pkt.haslayer(ZigbeeAppCommandPayload) or output_pkt.haslayer(ZigbeeAppDataPayload):
-                self.sequence_numbers["aps_seq"] = (getattr(output_pkt, "counter", self.sequence_numbers["aps_seq"]) + 1) & 0xFF
+            # This is another increment of the counters - more of a safety measure
 
             print("Output packet summary:", output_pkt.summary())
             output_pkt.show2()
@@ -306,7 +322,6 @@ class ZigbeeSUL:
             sym = "APS_CMD_TRANSPORT_TC_LINK_KEY"
             key_bytes = bytes(getattr(aps_cmd, "key", b""))
             if key_bytes:
-                print("TC Link Key set to:", key_bytes.hex())
                 self.config["tc_link_key"] = key_bytes
                 return sym+f"(tc_link_key={self.config["tc_link_key"]})"
             return sym+"(tc_link_key=no-key)"
@@ -365,6 +380,7 @@ class ZigbeeSUL:
     def mac_data_request_pre(self, pkt, input_symbol):
         return pkt, input_symbol
 
+    """
     def mac_data_request_post(self, input_symbol, pkt, output_pkts):
         pkt = Dot15d4FCS(bytes(pkt))
         output_symbol = self.format_output(output_pkts)
@@ -374,7 +390,7 @@ class ZigbeeSUL:
             self.send(pkt)
             output_pkts = self.receive(pkt)
         return output_pkts
-
+    """
 
     def mac_gts_request_pre(self, pkt, input_symbol):
         pkt[Dot15d4CmdGTSReq].gts_len = 1
@@ -389,7 +405,7 @@ class ZigbeeSUL:
     def mac_orphan_notification_pre(self, pkt, input_symbol):
         return pkt, input_symbol
 
-    def aps_request_key_pre(self, pkt, input_symbol):
+    def aps_request_tclk_pre(self, pkt, input_symbol):
         print("Request Key - Pre Handler")
         frame, aps_bytes = aps_encrypt(self, pkt)
         if self.network_secured:
@@ -402,21 +418,26 @@ class ZigbeeSUL:
         print("New input_symbol:", input_symbol)
         return pkt, input_symbol
 
+    def aps_request_nwk_key_pre(self, pkt, input_symbol):
+        print("Request Key - Pre Handler")
+        frame, aps_bytes = aps_encrypt(self, pkt)
+        pkt = frame
+        input_symbol = input_symbol+"_PLAIN"
+        print("New input_symbol:", input_symbol)
+        return frame, input_symbol
 
     #TODO: Check that this hash assignment works
-    def aps_verify_tc_link_key_pre(self, pkt, input_symbol):
-        if (self.config["tc_link_key"]) == 0:
+    def aps_verify_tclk_pre(self, pkt, input_symbol):
+        if self.config["tc_link_key"] == 0:
             print("TC Link Key not set, skipping hash assignment")
             return pkt, input_symbol
         verify_hash = zigbee_hmac(self, b"\x03", self.config["tc_link_key"])
-        input_symbol = input_symbol+"_WITH_TC_LINK_KEY"
         pkt[ZigbeeAppCommandPayload].key_hash = verify_hash
         frame, _ = aps_encrypt(self, pkt)
         return frame, input_symbol
 
     def aps_verify_global_key_pre(self, pkt, input_symbol):
         verify_hash = zigbee_hmac(self, b"\x03", self.config["tc_global_key"])
-        input_symbol = input_symbol+"_WITH_TC_GLOBAL_KEY"
         print(input_symbol)
         pkt[ZigbeeAppCommandPayload].key_hash = verify_hash
         frame, _ = aps_encrypt(self, pkt)

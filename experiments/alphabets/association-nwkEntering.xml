@@ -3,12 +3,11 @@
     <InputZigbee name="MAC_ASSOCIATION_REQUEST"/>
     <InputZigbee name="MAC_DATA_REQUEST"/>
     <InputZigbee name="MAC_DISASSOCIATION_NOTIFY"/>
-    <!-- <InputZigbee name="ZDO_DEVICE_ANNOUNCE"/> -->
-    <InputZigbee name="ZDO_NODE_DESCRIPTOR_REQUEST"/>
     <InputZigbee name="NWK_REJOIN_REQUEST_TC"/>
     <InputZigbee name="NWK_REJOIN_REQUEST_SECURE"/>
-    <InputZigbee name="APS_REQUEST_KEY"/>
-    <InputZigbee name="APS_VERIFY_TC_LINK_KEY"/>
+    <InputZigbee name="APS_REQUEST_TCLK"/>
+    <InputZigbee name="APS_REQUEST_NWK_KEY"/>
+    <InputZigbee name="APS_VERIFY_TCLK"/>
     <InputZigbee name="APS_VERIFY_GLOBAL_KEY"/>
 </alphabet>
 

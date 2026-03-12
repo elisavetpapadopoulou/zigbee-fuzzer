@@ -130,10 +130,29 @@ PACKET_TEMPLATES = {
                                                     / Dot15d4Data() / ZigbeeNWK(frametype = 1)
                                                     / ZigbeeSecurityHeader()
                                                     / ZigbeeAppCommandPayload(cmd_identifier = 5),
-    'APS_ACK':                          lambda self: Dot15d4FCS(fcf_frametype = 1)
-                                                    / Dot15d4Data()
-                                                    / ZigbeeNWK(frametype = 0)
-                                                    / ZigbeeAppDataPayload(frame_control = 2),
+    'APS_ACK':                          lambda self: Dot15d4FCS(
+                                                        fcf_frametype=1,
+                                                        fcf_ackreq=0,
+                                                        fcf_panidcompress=1,
+                                                        fcf_destaddrmode=2,
+                                                        fcf_srcaddrmode=2,
+                                                        seqnum=self.sequence_numbers["mac_seq"] & 0xFF
+                                                    )/ Dot15d4Data(
+                                                        dest_panid=self.config["pan_id"],
+                                                        dest_addr=0x0000,
+                                                        src_addr=self.config["short_address"]
+                                                    )/ ZigbeeNWK(
+                                                        frametype=0,
+                                                        destination=0x0000,
+                                                        source=self.config["short_address"],
+                                                        radius=30,
+                                                        seqnum=self.sequence_numbers["nwk_seq"] & 0xFF
+                                                    )/ ZigbeeAppDataPayload(
+                                                        frame_control=['ack_format'],
+                                                        aps_frametype=2,
+                                                        delivery_mode=0,
+                                                        counter=2 & 0xFF,
+                                                    ),
     'NWK_ROUTE_REPLY':                  lambda self: Dot15d4FCS(
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
@@ -208,7 +227,7 @@ PACKET_TEMPLATES = {
                                                         src_addr=self.config["ieee_address"]
                                                     ) / ZigbeeNWK(
                                                         frametype=1,
-                                                        flags="extended_src",
+                                                        flags=["extended_src", "security"],
                                                         destination=self.config["coord_addr"],
                                                         source=self.config["short_address"],
                                                         radius=1,
@@ -225,6 +244,37 @@ PACKET_TEMPLATES = {
                                                         receiver_on_when_idle=0,
                                                         alternate_pan_coordinator=0
                                                     ),
+'ZDO_NODE_DESCRIPTOR_REQUEST_UNENCRYPTED':      lambda self: Dot15d4FCS(
+                                                        fcf_frametype=1,
+                                                        fcf_security=0,
+                                                        fcf_ackreq=1,
+                                                        fcf_panidcompress=1,
+                                                        fcf_destaddrmode=2,
+                                                        fcf_srcaddrmode=3,
+                                                        seqnum=self.sequence_numbers["mac_seq"]
+                                                    )/ Dot15d4Data(
+                                                        dest_panid=self.config["pan_id"],
+                                                        dest_addr=self.config["coord_addr"],
+                                                        src_addr=self.config["short_address"]
+                                                    )/ ZigbeeNWK(
+                                                        frametype=0,
+                                                        flags=['extended_src'],
+                                                        destination=self.config["coord_addr"],
+                                                        source=self.config["short_address"],
+                                                        ext_src=self.config["ieee_address"],
+                                                        radius=30,
+                                                        seqnum=(self.sequence_numbers["nwk_seq"]) & 0xFF
+                                                    )/ ZigbeeAppDataPayload(
+                                                        frame_control=0,
+                                                        aps_frametype=0,
+                                                        delivery_mode=0,
+                                                        counter=(self.sequence_numbers["aps_seq"]) & 0xFF,
+                                                        profile=0x0000,
+                                                        cluster=0x0002,
+                                                        src_endpoint=0,
+                                                        dst_endpoint=0
+                                                    )/ Raw(bytes([self.sequence_numbers["zdo_tsn"] & 0xFF]) + self.config["coord_addr"].to_bytes(2, "little")),
+
 
     'ZDO_NODE_DESCRIPTOR_REQUEST':      lambda self: Dot15d4FCS(
                                                         fcf_frametype=1,
@@ -243,14 +293,73 @@ PACKET_TEMPLATES = {
                                                         destination=self.config["coord_addr"],
                                                         source=self.config["short_address"],
                                                         radius=30,
-                                                        seqnum=(self.sequence_numbers["nwk_seq"] + 1) & 0xFF
+                                                        seqnum=(self.sequence_numbers["nwk_seq"]) & 0xFF
                                                     )/ ZigbeeAppDataPayload(
                                                         frame_control=0,
                                                         aps_frametype=0,
                                                         delivery_mode=0,
-                                                        counter=(self.sequence_numbers["aps_seq"] + 1) & 0xFF,
+                                                        counter=(self.sequence_numbers["aps_seq"]) & 0xFF,
                                                         profile=0x0000,
                                                         cluster=0x0002,
+                                                        src_endpoint=0,
+                                                        dst_endpoint=0
+                                                    )/ Raw(bytes([self.sequence_numbers["zdo_tsn"] & 0xFF]) + self.config["coord_addr"].to_bytes(2, "little")),
+
+    'ZDO_SIMPLE_DESCRIPTOR_REQUEST':      lambda self: Dot15d4FCS(
+                                                        fcf_frametype=1,
+                                                        fcf_security=0,
+                                                        fcf_ackreq=1,
+                                                        fcf_panidcompress=1,
+                                                        fcf_destaddrmode=2,
+                                                        fcf_srcaddrmode=2,
+                                                        seqnum=self.sequence_numbers["mac_seq"]
+                                                    )/ Dot15d4Data(
+                                                        dest_panid=self.config["pan_id"],
+                                                        dest_addr=self.config["coord_addr"],
+                                                        src_addr=self.config["short_address"]
+                                                    )/ ZigbeeNWK(
+                                                        frametype=0,
+                                                        destination=self.config["coord_addr"],
+                                                        source=self.config["short_address"],
+                                                        radius=30,
+                                                        seqnum=(self.sequence_numbers["nwk_seq"]) & 0xFF
+                                                    )/ ZigbeeAppDataPayload(
+                                                        frame_control=0,
+                                                        aps_frametype=0,
+                                                        delivery_mode=0,
+                                                        counter=(self.sequence_numbers["aps_seq"]) & 0xFF,
+                                                        profile=0x0000,
+                                                        cluster=0x0004,
+                                                        src_endpoint=0,
+                                                        dst_endpoint=0
+                                                    )/ Raw(bytes([self.sequence_numbers["zdo_tsn"] & 0xFF]) + self.config["coord_addr"].to_bytes(2, "little")),
+
+
+    'ZDO_MGMT_LQI_REQ':                       lambda self: Dot15d4FCS(
+                                                        fcf_frametype=1,
+                                                        fcf_security=0,
+                                                        fcf_ackreq=1,
+                                                        fcf_panidcompress=1,
+                                                        fcf_destaddrmode=2,
+                                                        fcf_srcaddrmode=2,
+                                                        seqnum=self.sequence_numbers["mac_seq"]
+                                                    )/ Dot15d4Data(
+                                                        dest_panid=self.config["pan_id"],
+                                                        dest_addr=self.config["coord_addr"],
+                                                        src_addr=self.config["short_address"]
+                                                    )/ ZigbeeNWK(
+                                                        frametype=0,
+                                                        destination=self.config["coord_addr"],
+                                                        source=self.config["short_address"],
+                                                        radius=30,
+                                                        seqnum=(self.sequence_numbers["nwk_seq"]) & 0xFF
+                                                    )/ ZigbeeAppDataPayload(
+                                                        frame_control=0,
+                                                        aps_frametype=0,
+                                                        delivery_mode=0,
+                                                        counter=(self.sequence_numbers["aps_seq"]) & 0xFF,
+                                                        profile=0x0000,
+                                                        cluster=0x00031,
                                                         src_endpoint=0,
                                                         dst_endpoint=0
                                                     )/ Raw(bytes([self.sequence_numbers["zdo_tsn"] & 0xFF]) + self.config["coord_addr"].to_bytes(2, "little")),
@@ -283,7 +392,7 @@ PACKET_TEMPLATES = {
                                                         key_type=0x01
                                                     ),
 
-    'APS_REQUEST_KEY':                lambda self: Dot15d4FCS(
+    'APS_REQUEST_TCLK':                lambda self: Dot15d4FCS(
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -313,13 +422,43 @@ PACKET_TEMPLATES = {
                                                         key_type=0x04
                                                     ),
 
+    'APS_REQUEST_NWK_KEY':                lambda self: Dot15d4FCS(
+                                                        fcf_frametype = 1,
+                                                        fcf_security=0,
+                                                        fcf_ackreq=1,
+                                                        fcf_panidcompress=1,
+                                                        fcf_destaddrmode=2,
+                                                        fcf_srcaddrmode=2,
+                                                        seqnum=self.sequence_numbers["mac_seq"] & 0xFF
+                                                    )/ Dot15d4Data(
+                                                        dest_panid=self.config["pan_id"],
+                                                        dest_addr=self.config["coord_addr"],
+                                                        src_addr=self.config["short_address"]
+                                                    )/ ZigbeeNWK(
+                                                        frametype = 0,
+                                                        destination=self.config["coord_addr"],
+                                                        flags=["extended_src"],
+                                                        source=self.config["short_address"],
+                                                        ext_src=self.config["ieee_address"],
+                                                        radius=30,
+                                                        seqnum=self.sequence_numbers["nwk_seq"] & 0xFF
+                                                    )/ ZigbeeAppDataPayload(
+                                                        aps_frametype=1,
+                                                        delivery_mode=0,
+                                                        frame_control=6,
+                                                        counter=self.sequence_numbers["aps_seq"] & 0xFF
+                                                    )/ ZigbeeAppCommandPayload(
+                                                        cmd_identifier=0x08,
+                                                        key_type=0x01
+                                                    ),
+
     'APS_CONFIRM_KEY':                   lambda self: Dot15d4FCS(fcf_frametype = 1)
                                                     / Dot15d4Data()
                                                     / ZigbeeNWK(frametype = 1)
                                                     / ZigbeeSecurityHeader()
                                                     / ZigbeeAppCommandPayload(cmd_identifier = 15),
 
-    'APS_VERIFY_TC_LINK_KEY':                  lambda self: Dot15d4FCS(
+    'APS_VERIFY_TCLK':                  lambda self: Dot15d4FCS(
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,

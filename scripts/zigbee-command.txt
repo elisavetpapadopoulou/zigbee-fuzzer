@@ -1,1 +1,1 @@
-java -jar target/ble-fuzzer-1.0-SNAPSHOT.jar state-fuzzer-server -output experiments/results/second-exp-in-uu -alphabet experiments/alphabets/association-nwkEntering.xml -equivalenceQueryBound 5000 -logQueries -adapter localhost:6000 -connect EB:D8:6B:33:90:0B -ceReruns 3
+java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar state-fuzzer-server -output experiments/results/hardware_trial -alphabet experiments/alphabets/association-nwkEntering.xml -equivalenceQueryBound 5000 -logQueries -adapter /dev/ttyACM0 -connect EB:D8:6B:33:90:0B -ceReruns 3

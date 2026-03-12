@@ -11,9 +11,9 @@ mkdir -p "$LOG_DIR"
 cd "$ROOT_DIR"
 
 # pkill -f "npm run dev:cli"                  2>/dev/null || true
+pkill -f "node dist/dev/cli.js form yes"    2>/dev/null || true
+pkill -f "node dist/dev/cli.js form yes"    2>/dev/null || true
 rm -f "$ROOT_DIR/zoh.save"
-pkill -f "node dist/dev/cli.js form yes"    2>/dev/null || true
-pkill -f "node dist/dev/cli.js form yes"    2>/dev/null || true
 sleep 5
 
 
