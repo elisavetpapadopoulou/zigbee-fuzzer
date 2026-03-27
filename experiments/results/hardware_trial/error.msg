@@ -35,7 +35,7 @@ Caused by: jep.JepException: <class 'serial.serialutil.SerialException'>: 2
 	at /home/eliza/.local/lib/python3.14/site-packages/serial/serialutil.__init__(serialutil.py:244)
 	at /home/eliza/Coding/Thesis/zigbee-fuzzer/py/InjectorDriver.open(InjectorDriver.py:12)
 	at /home/eliza/Coding/Thesis/zigbee-fuzzer/py/ZigbeeSUL.pre(ZigbeeSUL.py:64)
-	at /home/eliza/Coding/Thesis/zigbee-fuzzer/py/ZigbeeSUL.pre(ZigbeeSUL.py:68)
+	at /home/eliza/Coding/Thesis/zigbee-fuzzer/py/ZigbeeSUL.pre(ZigbeeSUL.py:69)
 	at <string>.<module>(<string>:1)
 	at jep.Jep.exec(Native Method)
 	at jep.Jep.exec(Jep.java:355)

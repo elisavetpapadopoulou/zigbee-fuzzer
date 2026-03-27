@@ -2,7 +2,7 @@ from Cryptodome.Cipher import AES
 import struct
 
 from scapy.all import conf, raw
-from scapy.layers.dot15d4 import Dot15d4FCS, Dot15d4Data
+from scapy.layers.dot15d4 import Dot15d4, Dot15d4Data
 from scapy.layers.zigbee import ZigbeeAppDataPayload, ZigbeeNWK, ZigbeeNWKCommandPayload, ZigbeeSecurityHeader, ZigbeeAppCommandPayload
 from scapy.packet import Raw
 
@@ -29,9 +29,9 @@ def _sec_owner(pkt):
     return type(sec.underlayer)
 
 def _mk_mac_ll(pkt):
-    mac0 = pkt[Dot15d4FCS]
+    mac0 = pkt[Dot15d4]
     ll0  = pkt[Dot15d4Data]
-    mac = Dot15d4FCS(
+    mac = Dot15d4(
         fcf_frametype     = mac0.fcf_frametype,
         fcf_security      = mac0.fcf_security,
         fcf_ackreq        = mac0.fcf_ackreq,
@@ -64,7 +64,7 @@ def rebuild_plain_nwk(pkt, plaintext: bytes):
         Remove ZigbeeSecurityHeader and attach the decrypted NWK payload (pt).
         Try to parse it as APS (most common), else NWK command, else Raw.
         """
-        mac = pkt[Dot15d4FCS].copy()
+        mac = pkt[Dot15d4].copy()
         mac.remove_payload()
         ll  = pkt[Dot15d4Data].copy()
         ll.remove_payload()
@@ -84,9 +84,9 @@ def rebuild_plain_nwk(pkt, plaintext: bytes):
 def rebuild_plain_aps(pkt, plaintext: bytes):
     """
     Return a new packet:
-      Dot15d4FCS / NWK / APS(with security bit cleared) / <decrypted layer>
+      Dot15d4 / NWK / APS(with security bit cleared) / <decrypted layer>
     """
-    mac = pkt[Dot15d4FCS].copy()
+    mac = pkt[Dot15d4].copy()
     mac.remove_payload()
     ll  = pkt[Dot15d4Data].copy()
     ll.remove_payload()
@@ -135,7 +135,7 @@ def aps_encrypt(self, pkt):
     nonce = src_le + fc_le + bytes([sec_fixed])
     aad   = aps_hdr_b + bytes([sec_fixed]) + fc_le + src_le
 
-    if self.config["tc_link_key"] != 0:
+    if self.config["tc_link_key"]:
         print("HURRAY!! Using TC Link Key for APS encryption")
         tc_key = self.config["tc_link_key"]
     else:
@@ -165,10 +165,20 @@ def nwk_encrypt(self, pkt, aps_pdu_bytes):
 
     mac, ll = _mk_mac_ll(pkt)
 
-    nwk = pkt[ZigbeeNWK].copy()
-    nwk.flags   = "security+extended_src"  # 0x12
-    nwk.ext_src = my_eui64
-    nwk.remove_payload()
+    nwk0 = pkt[ZigbeeNWK]
+
+    # nwk = pkt[ZigbeeNWK].copy()
+    nwk = ZigbeeNWK(
+            frametype   = nwk0.frametype,
+            destination = nwk0.destination,
+            source      = nwk0.source,
+            flags       = ["security", "extended_src"],  # 0x12
+            radius      = nwk0.radius,
+            seqnum      = nwk0.seqnum & 0xFF,
+            ext_src      = my_eui64,
+    )
+    # nwk.ext_src = my_eui64
+    # nwk.remove_payload()
     nwk_hdr_b = bytes(nwk)
 
     self.sequence_numbers["sec_nwk_fc"] = (self.sequence_numbers["sec_nwk_fc"] + 1) & 0xFFFFFFFF
@@ -227,10 +237,11 @@ def decode(self, pkt):
     key_seqnum = sec.key_seqnum
     key = ""
 
-    if self.config["tc_link_key"] != 0:
-        tc_key = self.config["tc_link_key"]
-    else:
+    if not self.config["tc_link_key"]:
+        print("No TCLK here")
         tc_key = self.config["tc_global_key"]
+    else:
+        tc_key = self.config["tc_link_key"]
 
     if key_id == 1:
         if self.config["network_key"] != {}:
@@ -403,7 +414,7 @@ def decode_all(self, pkt):
             #                 self.config["tc_link_key"] = key_bytes
             # else:
             #     break
-    return Dot15d4FCS(bytes(pkt))
+    return Dot15d4(bytes(pkt))
 
 
 

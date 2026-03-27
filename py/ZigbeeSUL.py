@@ -7,18 +7,21 @@ import time
 
 from ZigbeeEncryption import decode_all
 from zigbeeOnHostDriver import zigbeeOnHostDriver
+from InjectorDriver import InjectorDriver
+from WpanSerialDriver import WpanSerialDriver
 
 #TODO: Why is Association Request replied to even when I don't know the coordinator' short address yet?'
 class ZigbeeSUL:
     def __init__(self, serial_port, target_mac=0x0000, ):
-        self.driver = zigbeeOnHostDriver(
-                host="127.0.0.1",
-                port=6000,
-                restart_cmd=["/bin/bash", "/home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh"],
-                restart_on_reset=True,
-                restart_on_disconnect=True,
-                restart_cooldown_s=2.0,
-                )
+        # self.driver = zigbeeOnHostDriver(
+        #         host="127.0.0.1",
+        #         port=6000,
+        #         restart_cmd=["/bin/bash", "/home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh"],
+        #         restart_on_reset=True,
+        #         restart_on_disconnect=True,
+        #         restart_cooldown_s=2.0,
+        #         )
+        self.driver = WpanSerialDriver(serial_port, 115200)
         self.packets = PACKET_TEMPLATES
         self.seq = 0
         self.config = {
@@ -29,7 +32,7 @@ class ZigbeeSUL:
             "short_address": 0xFFFE,
             "ieee_address": 0x79bc000000010002,
             "tc_global_key": bytes([90,105,103,66,101,101,65,108,108,105,97,110,99,101,48,57]),
-            "tc_link_key": bytes([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
+            "tc_link_key": b"",
             "network_key": {}
         }
         self.sequence_numbers = {
@@ -46,20 +49,22 @@ class ZigbeeSUL:
         self.primed = False
         self.network_secured = False
 
-    def pre(self, timeout_s=15.0):
+    def pre(self, timeout_s=0.0):
         try:
-            self.reset()
-            print("First connection attempt...")
-            if not getattr(self, "_srv_th", None):
-                self._srv_th = threading.Thread(target=self.driver.serve_once, daemon=True)
-                self._srv_th.start()
-                time.sleep(7)
-            else:
-                self.driver._run_restart_cmd("manual-start")
-            if not self.driver.wait_connect(timeout_s):
-                raise TimeoutError("Zigbee stack did not connect in time")
-            self.driver.wait_ready(7)
-            time.sleep(1)
+            # self.reset()
+            # print("First connection attempt...")
+            # if not getattr(self, "_srv_th", None):
+            #     self._srv_th = threading.Thread(target=self.driver.serve_once, daemon=True)
+            #     self._srv_th.start()
+            #     time.sleep(7)
+            # else:
+            #     self.driver._run_restart_cmd("manual-start")
+            # if not self.driver.wait_connect(timeout_s):
+            #     raise TimeoutError("Zigbee stack did not connect in time")
+            # self.driver.wait_ready(7)
+            self.driver.open()
+            self.driver.set_channel(15)
+            time.sleep(5)
             self.primed = True
         except Exception as e:
             print(traceback.format_exc())
@@ -80,7 +85,7 @@ class ZigbeeSUL:
 
     def increment_counters(self, pkt):
         # Increment the correct counters AFTER crafting the packet
-        if pkt.haslayer(Dot15d4FCS):
+        if pkt.haslayer(Dot15d4):
             self.sequence_numbers["mac_seq"] =  (self.sequence_numbers["mac_seq"] + 1) & 0xFF
         if pkt.haslayer(ZigbeeNWK):
             self.sequence_numbers["nwk_seq"] = (self.sequence_numbers["nwk_seq"] + 1) & 0xFF
@@ -119,7 +124,7 @@ class ZigbeeSUL:
 
             # Poll for response if the input pkt is supposed to be polled to return a response
             if output_symbol == "EMPTYRESPONSE":
-                if input_symbol not in ["MAC_BEACON_REQUEST", "MAC_DATA_REQUEST", "APS_REQUEST_NWK_KEY"]:
+                if input_symbol not in ["MAC_BEACON_REQUEST", "MAC_ASSOCIATION_REQUEST", "MAC_DATA_REQUEST", "APS_REQUEST_NWK_KEY"]:
                     poll = self.packets["MAC_DATA_REQUEST"](self)
                     self.increment_counters(poll)
                     self.send(poll, "MAC_DATA_REQUEST")
@@ -140,7 +145,7 @@ class ZigbeeSUL:
         self.driver.inject_air_frame_with_meta(bytes(pkt))
 
 
-    def receive(self, pkt, max_pkts=1, timeout=6.0):
+    def receive(self, pkt, max_pkts=1, timeout=15):
         packets = []
         time_start = time.time()
         time_now = time_start
@@ -149,8 +154,9 @@ class ZigbeeSUL:
             data = self.driver.receive_raw()
             if data is not None:
                 try:
-                    clean = data[1:-2]
-                    pkt = Dot15d4FCS(bytes(clean))
+                    # clean = data[1:-2]
+                    clean = data
+                    pkt = Dot15d4(bytes(clean))
                     if pkt.haslayer(ZigbeeSecurityHeader):
                         decoded = decode_all(self, pkt)
                         pkt = decoded
@@ -188,7 +194,7 @@ class ZigbeeSUL:
             # This is another increment of the counters - more of a safety measure
 
             print("Output packet summary:", output_pkt.summary())
-            output_pkt.show2()
+            # output_pkt.show2()
             # sym = self.symbols.get(s, s.replace(' / ', '>'))
             sym = self._handlers(output_pkt)
             entries.append((output_pkt, sym))
@@ -208,7 +214,7 @@ class ZigbeeSUL:
             "pan_id": 0xFFFF,
             "coord_addr": 0xFFFF,
             "short_address": 0xFFFE,
-            "tc_link_key": 0,
+            "tc_link_key": b"",
             "network_key": {}
         })
         self.sequence_numbers = {k: 1 for k in self.sequence_numbers}
@@ -252,8 +258,32 @@ class ZigbeeSUL:
             aps_data = pkt[ZigbeeAppDataPayload]
             aps_frametype = getattr(aps_data, "aps_frametype", None)
             if  aps_frametype == 0 :
-                if int(aps_data.profile) == 0x0000 and int(aps_data.cluster) == 0x8002:
+                cluster = int(getattr(aps_data, "cluster", -1))
+                profile = int(getattr(aps_data, "profile", -1))
+                if profile == 0x0000 and cluster == 0x0002:
+                    sym = "ZDO_NODE_DESCRIPTOR_REQUEST"
+                elif profile == 0x0000 and cluster == 0x8002:
                     sym = "ZDO_NODE_DESCRIPTOR_RESPONSE"
+                elif profile == 0x0000 and cluster == 0x0001:
+                    sym = "ZDO_EXTENDED_ADDRESS_REQUEST"
+                elif profile == 0x0000 and cluster == 0x0005:
+                    sym = "ZDO_ACTIVE_ENDPOINT_REQUEST"
+                elif profile == 0x0000 and cluster == 0x0004:
+                    sym = "ZDO_SIMPLE_DESCRIPTOR_REQUEST"
+                elif profile == 0x0104 and cluster == 0x0000:
+                    zcl = bytes(aps_data.payload)
+                    if len(zcl) >= 3:
+                        zcl_frame_control = zcl[0]
+                        zcl_seq = zcl[1]
+                        zcl_cmd = zcl[2]
+
+                        if zcl_cmd == 0x00:
+                            sym = "ZCL_READ_ATTRIBUTES_REQUEST"
+                            self.last_zcl_seq = zcl_seq
+                            self.last_zcl_request_src = pkt[ZigbeeNWK].source
+                            self.last_zcl_src_endpoint = aps_data.src_endpoint
+                            self.last_zcl_dst_endpoint = aps_data.dst_endpoint
+
             elif aps_frametype == 2:
                 sym = "APS_ACK"
 
@@ -290,7 +320,6 @@ class ZigbeeSUL:
         association_permit = getattr(pkt, "sf_assocpermit", None)
         return sym+f"(assoc_permit={association_permit})"
 
-    #TODO: For some reason association succeeds without definition of specific pan_id and coordinator address, need to check if this is expected behavior or if there's some issue with the way I'm handling the association response
     def _h_mac_association_response(self, pkt, sym):
         if self.config["pan_id"] == 0xFFFF:
             self.config["pan_id"] = 0x6963
@@ -310,6 +339,11 @@ class ZigbeeSUL:
         aps_cmd = pkt[ZigbeeAppCommandPayload]
         key_type = int(getattr(aps_cmd, "key_type", -1))
         if key_type == 0x01:
+            mac_data = pkt[Dot15d4Data]
+            if self.config["short_address"] == 0xFFFE:
+                self.config["pan_id"] = getattr(mac_data, "dest_panid", -1)
+                self.config["coord_addr"] = getattr(mac_data, "src_addr", -1)
+                self.config["short_address"] = getattr(mac_data, "dest_addr", -1)
             sym = "APS_CMD_TRANSPORT_NWK_KEY"
             key_bytes = bytes(getattr(aps_cmd, "key", b""))
             if key_bytes:
@@ -366,6 +400,38 @@ class ZigbeeSUL:
         status = getattr(aps_cmd, "status", -1)
         return sym+f"(status={status})"
 
+    def _h_zdo_node_descriptor_request(self, pkt, sym):
+        zdo_tsn = getattr(pkt, "trans_seqnum", None)
+        if zdo_tsn is not None:
+            print(f"Updating ZDO TSN to {zdo_tsn}")
+            self.sequence_numbers["zdo_tsn"] = int(zdo_tsn)
+        return sym
+
+    def _h_zdo_simple_descriptor_request(self, pkt, sym):
+        zdo_tsn = getattr(pkt, "trans_seqnum", None)
+        if zdo_tsn is not None:
+            print(f"Updating ZDO TSN to {zdo_tsn}")
+            self.sequence_numbers["zdo_tsn"] = int(zdo_tsn)
+        return sym
+
+    def _h_zdo_extended_address_request(self, pkt, sym):
+        pkt.show2()
+        zdo_tsn = getattr(pkt, "trans_seqnum", None)
+        if zdo_tsn is not None:
+            self.sequence_numbers["zdo_tsn"] = int(zdo_tsn)
+        return sym
+
+    def _h_zdo_active_endpoint_request(self, pkt, sym):
+        zdo_tsn = getattr(pkt, "trans_seqnum", None)
+        if zdo_tsn is not None:
+            print(f"Updating ZDO TSN to {zdo_tsn}")
+            self.sequence_numbers["zdo_tsn"] = int(zdo_tsn)
+        return sym
+
+    def _h_zcl_read_attributes_request(self, pkt, sym):
+        return sym
+
+
 
     """
         Pre-processing functions for outgoing frames
@@ -374,7 +440,7 @@ class ZigbeeSUL:
         return pkt, input_symbol
 
     def mac_association_request_pre(self, pkt, input_symbol):
-        print(pkt.show2())
+        # print(pkt.show2())
         return pkt, input_symbol
 
     def mac_data_request_pre(self, pkt, input_symbol):
@@ -382,11 +448,11 @@ class ZigbeeSUL:
 
     """
     def mac_data_request_post(self, input_symbol, pkt, output_pkts):
-        pkt = Dot15d4FCS(bytes(pkt))
+        pkt = Dot15d4(bytes(pkt))
         output_symbol = self.format_output(output_pkts)
         if output_symbol == "EMPTYRESPONSE":
             time.sleep(2)
-            pkt[Dot15d4FCS].seqnum += 1
+            pkt[Dot15d4].seqnum += 1
             self.send(pkt)
             output_pkts = self.receive(pkt)
         return output_pkts
@@ -428,7 +494,7 @@ class ZigbeeSUL:
 
     #TODO: Check that this hash assignment works
     def aps_verify_tclk_pre(self, pkt, input_symbol):
-        if self.config["tc_link_key"] == 0:
+        if not self.config["tc_link_key"]:
             print("TC Link Key not set, skipping hash assignment")
             return pkt, input_symbol
         verify_hash = zigbee_hmac(self, b"\x03", self.config["tc_link_key"])
@@ -454,6 +520,7 @@ class ZigbeeSUL:
         return pkt, input_symbol
 
     def nwk_rejoin_request_tc_pre(self, pkt, input_symbol):
+        print("hex:", bytes(pkt).hex())
         # self.network_secured = False
         return pkt, input_symbol
 
@@ -480,7 +547,57 @@ class ZigbeeSUL:
             input_symbol = input_symbol+"_PLAIN"
         return pkt, input_symbol
 
+    def zdo_node_descriptor_response_pre(self, pkt, input_symbol):
+        aps = pkt[ZigbeeAppDataPayload]
+        aps_bytes = bytes(aps)
+        if self.network_secured:
+            pkt = nwk_encrypt(self, pkt, aps_bytes)
+            input_symbol = input_symbol+"_ENCRYPTED"
+        else:
+            input_symbol = input_symbol+"_PLAIN"
+        return pkt, input_symbol
+
+    def zdo_simple_descriptor_response_pre(self, pkt, input_symbol):
+        aps = pkt[ZigbeeAppDataPayload]
+        aps_bytes = bytes(aps)
+        if self.network_secured:
+            pkt = nwk_encrypt(self, pkt, aps_bytes)
+            input_symbol = input_symbol+"_ENCRYPTED"
+        else:
+            input_symbol = input_symbol+"_PLAIN"
+        return pkt, input_symbol
+
+    def zdo_extended_address_response_pre(self, pkt, input_symbol):
+        aps = pkt[ZigbeeAppDataPayload]
+        aps_bytes = bytes(aps)
+        if self.network_secured:
+            pkt = nwk_encrypt(self, pkt, aps_bytes)
+            input_symbol = input_symbol+"_ENCRYPTED"
+        else:
+            input_symbol = input_symbol+"_PLAIN"
+        return pkt, input_symbol
+
+    def zdo_active_endpoint_response_pre(self, pkt, input_symbol):
+        aps = pkt[ZigbeeAppDataPayload]
+        aps_bytes = bytes(aps)
+        if self.network_secured:
+            pkt = nwk_encrypt(self, pkt, aps_bytes)
+            input_symbol = input_symbol+"_ENCRYPTED"
+        else:
+            input_symbol = input_symbol+"_PLAIN"
+        return pkt, input_symbol
+
     def zcl_read_attributes_pre(self, pkt, input_symbol):
+        aps = pkt[ZigbeeAppDataPayload]
+        aps_pdu_bytes = bytes(aps)
+        if self.network_secured:
+            pkt = nwk_encrypt(self, pkt, aps_pdu_bytes)
+            input_symbol = input_symbol+"_ENCRYPTED"
+        else:
+            input_symbol = input_symbol+"_PLAIN"
+        return pkt, input_symbol
+
+    def zcl_read_attributes_response_pre(self, pkt, input_symbol):
         aps = pkt[ZigbeeAppDataPayload]
         aps_pdu_bytes = bytes(aps)
         if self.network_secured:
