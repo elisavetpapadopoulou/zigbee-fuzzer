@@ -1,6 +1,7 @@
 from Cryptodome.Cipher import AES
 import struct
 
+import prettylog as log
 from scapy.all import conf, raw
 from scapy.layers.dot15d4 import Dot15d4, Dot15d4Data
 from scapy.layers.zigbee import ZigbeeAppDataPayload, ZigbeeNWK, ZigbeeNWKCommandPayload, ZigbeeSecurityHeader, ZigbeeAppCommandPayload
@@ -56,7 +57,7 @@ def is_nwk_link_status(pkt_plain):
     if nwk.frametype != 1:
         return False
     cmd_id = getattr(cmd, "cmd_identifier", None)
-    print("[is_nwk_link_status()] cmd_identifier: ", cmd_id)
+    log.warn("Ignoring NWK_LINK_STATUS")
     return cmd_id == 0x08
 
 def rebuild_plain_nwk(pkt, plaintext: bytes):
@@ -108,7 +109,7 @@ def rebuild_plain_aps(pkt, plaintext: bytes):
 
 def aps_encrypt(self, pkt):
     # Force APS header bits (visible)
-    print("Unencrypted APS payload: ", bytes(pkt).hex(), " (len=", len(bytes(pkt)), ")")
+    # print("Unencrypted APS payload: ", bytes(pkt).hex(), " (len=", len(bytes(pkt)), ")")
     aps = pkt[ZigbeeAppDataPayload]
     aps.aps_frametype = 1
     aps.delivery_mode = 0
@@ -136,7 +137,7 @@ def aps_encrypt(self, pkt):
     aad   = aps_hdr_b + bytes([sec_fixed]) + fc_le + src_le
 
     if self.config["tc_link_key"]:
-        print("HURRAY!! Using TC Link Key for APS encryption")
+        # print("HURRAY!! Using TC Link Key for APS encryption")
         tc_key = self.config["tc_link_key"]
     else:
         tc_key = self.config["tc_global_key"]
@@ -156,6 +157,7 @@ def aps_encrypt(self, pkt):
     mac, ll = _mk_mac_ll(pkt)
     nwk = pkt[ZigbeeNWK].copy(); nwk.remove_payload()
     aps_pkt = mac / ll / nwk / Raw(aps_pdu_bytes)
+    log.encrypt_ok("[APS] encrypted")
     return aps_pkt, aps_pdu_bytes
 
 def nwk_encrypt(self, pkt, aps_pdu_bytes):
@@ -205,11 +207,11 @@ def nwk_encrypt(self, pkt, aps_pdu_bytes):
 
 
     frame = mac / ll / nwk / Raw(nwk_aux_b + C + U)
-    print(f"APS_CMD_REQUEST_KEY: {bytes(frame).hex()}")
+    log.encrypt_ok("[NWK] encrypted")
     return frame
 
 
-def decode(self, pkt):
+def decrypt(self, pkt):
     sec = pkt.getlayer("ZigbeeSecurityHeader")
     # if self.final and not is_nwk_link_status(pkt):
     #     print("APS_CMD_REQUEST_KEY")
@@ -238,7 +240,7 @@ def decode(self, pkt):
     key = ""
 
     if not self.config["tc_link_key"]:
-        print("No TCLK here")
+        # print("No TCLK here")
         tc_key = self.config["tc_global_key"]
     else:
         tc_key = self.config["tc_link_key"]
@@ -315,9 +317,8 @@ def decode(self, pkt):
     plaintext = cipher.decrypt(C)
     cipher.verify(mic)
 
-    print(f"[APS] Decrypted OK (key_id={key_id}, sec_ctrl_wire=0x{security_control:02x})")
-
     return plaintext, key_id
+
 def zigbee_hmac(self, message, key):
     # HMAC uses the following inner and outer pads
     inner_pad = 0x36
@@ -384,14 +385,14 @@ def zigbee_mmo_hash(self, message):
     return bytes(digest)
 
 
-def decode_all(self, pkt):
-    print("[*] Attempting to decode packet with security header...")
-    print(bytes(pkt).hex())
+def decrypt_all(self, pkt):
+    log.info("Attempting to decrypt packet with security header...")
+    # print(bytes(pkt).hex())
     for _ in range(2):
         owner = _sec_owner(pkt)
         if owner is None:
             break
-        plaintext, key_id = decode(self, pkt)
+        plaintext, key_id = decrypt(self, pkt)
         if plaintext is None:
             return None
         # TODO: Return decoded pkt and let _post handlers extract the information
@@ -414,6 +415,7 @@ def decode_all(self, pkt):
             #                 self.config["tc_link_key"] = key_bytes
             # else:
             #     break
+    log.decrypt_ok("Decryption successful")
     return Dot15d4(bytes(pkt))
 
 

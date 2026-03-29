@@ -7,6 +7,8 @@ from typing import Optional, Callable
 
 from scapy.all import deque
 
+from prettylog import log_error, log_restart, log_success
+
 HDLC_FLAG = 0x7E
 HDLC_ESC = 0x7D
 HDLC_XOR = 0x20
@@ -230,11 +232,11 @@ class zigbeeOnHostDriver:
             if cmd is None:
                 return
             use_shell = isinstance(cmd, str)
-            print(f"[restart] reason='{reason}' running: {cmd}")
+            log_restart(f"reason={reason} running: {cmd}")
             subprocess.run(cmd, check=True, shell=use_shell)
-            print(f"[restart] {reason}: done")
+            log_restart(f"{reason}: done")
         except Exception as e:
-            print(f"[restart] FAILED: {e}")
+            log_error(f"[restart] FAILED: {e}")
 
     def enable_raw(self):
         prop_id = 55
@@ -266,7 +268,8 @@ class zigbeeOnHostDriver:
             raw_with_meta = self._rx_queue.popleft() if self._rx_queue else None
             if raw_with_meta is None:
                 return None
-            return raw_with_meta[:-1]
+            raw_without_meta = raw_with_meta[:-1]
+            return raw_without_meta[1:-2]
 
     def push_injected_raw(self, mac_pdu_with_meta:bytes):
         with self._q_lock:

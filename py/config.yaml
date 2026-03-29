@@ -1,0 +1,11 @@
+driver_type : "zoh"
+# For ZOH driver:
+zoh_host : "127.0.0.1"
+zoh_port : 6000
+restart_cmd : 
+  - /bin/bash
+  - /home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh
+# For hardware driver:
+baud_rate : 115200
+channel : 15
+
