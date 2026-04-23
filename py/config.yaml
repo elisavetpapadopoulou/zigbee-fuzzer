@@ -1,11 +1,19 @@
-driver_type : "zoh"
+driver_type : "hardware"
 # For ZOH driver:
 zoh_host : "127.0.0.1"
 zoh_port : 6000
-restart_cmd : 
+zoh_mac : 0x6c63696c63696c63
+zoh_timeout : 6
+zoh_restart_cmd : 
   - /bin/bash
   - /home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartZOHStack.sh
+
 # For hardware driver:
+hardware_mac : 0x00124b003a053efe
 baud_rate : 115200
-channel : 15
+channel : 20
+hardware_timeout : 17
+hardware_restart_cmd : 
+  - /bin/bash
+  - /home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartSonoffCoord.sh
 

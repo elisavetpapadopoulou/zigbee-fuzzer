@@ -7,7 +7,7 @@ from typing import Optional, Callable
 
 from scapy.all import deque
 
-from prettylog import log_error, log_restart, log_success
+from prettylog import log_error, log_restart, log_restart_step, log_success
 
 HDLC_FLAG = 0x7E
 HDLC_ESC = 0x7D
@@ -234,7 +234,7 @@ class zigbeeOnHostDriver:
             use_shell = isinstance(cmd, str)
             log_restart(f"reason={reason} running: {cmd}")
             subprocess.run(cmd, check=True, shell=use_shell)
-            log_restart(f"{reason}: done")
+            log_restart_step(f"{reason}: done")
         except Exception as e:
             log_error(f"[restart] FAILED: {e}")
 

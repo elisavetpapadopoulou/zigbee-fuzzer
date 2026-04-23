@@ -31,6 +31,11 @@ def driver_pre(self, config, driver, timeout_s=30):
             self.driver._run_restart_cmd("manual-start")
         if not self.driver.wait_connect(timeout_s):
             raise TimeoutError("Zigbee stack did not connect in time")
+        v = config["zoh_mac"]
+        self.config["coord_ieee"] = int(v, 0) if isinstance(v, str) else int(v)
+
+        print(f"driver_pre: coord_ieee set to {self.config['coord_ieee']:016x}")
+
         self.driver.wait_ready(7)
 
     elif isinstance(driver, WpanSerialDriver):
@@ -39,22 +44,3 @@ def driver_pre(self, config, driver, timeout_s=30):
         time.sleep(5)
     else:
         raise ValueError(f"Unknown driver type: {type(driver)}")
-
-class ZigbeeConfig:
-    def __init__(
-        self,
-        driver_type,
-        serial_port=None,
-        baud_rate=None,
-        zoh_host=None,
-        zoh_port=None,
-        restart_cmd=None,
-        channel=15,
-        ):
-        self.driver_type = driver_type
-        self.serial_port = serial_port
-        self.baud_rate = baud_rate
-        self.zoh_host = zoh_host
-        self.zoh_port = zoh_port
-        self.zoh_restart_cmd = restart_cmd
-        self.channel = channel

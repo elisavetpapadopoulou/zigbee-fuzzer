@@ -1,0 +1,327 @@
+========================================================================================================================
+Refinement block #1
+Inputs: 11, SUL outputs: 11, HYP outputs: 11, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                       | HYP                       | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_VERIFY_TCLK           | EMPTYRESPONSE             | EMPTYRESPONSE             | OK  
+2    | NWK_REJOIN_REQUEST_SECURE | EMPTYRESPONSE             | EMPTYRESPONSE             | OK  
+3    | MAC_DATA_REQUEST          | EMPTYRESPONSE             | EMPTYRESPONSE             | OK  
+4    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE             | EMPTYRESPONSE             | OK  
+5    | MAC_DATA_REQUEST          | EMPTYRESPONSE             | EMPTYRESPONSE             | OK  
+6    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY | APS_CMD_TRANSPORT_NWK_KEY | OK  
+7    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE             | EMPTYRESPONSE             | OK  
+8    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE             | EMPTYRESPONSE             | OK  
+9    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY | APS_CMD_TRANSPORT_NWK_KEY | OK  
+10   | NWK_REJOIN_REQUEST_SECURE | EMPTYRESPONSE             | EMPTYRESPONSE             | OK  
+11   | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK    | EMPTYRESPONSE             | DIFF
+
+========================================================================================================================
+Refinement block #2
+Inputs: 10, SUL outputs: 10, HYP outputs: 10, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                   | HYP                                   | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY             | OK  
+2    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                | APS_CMD_TRANSPORT_TCLK                | OK  
+3    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE                                         | EMPTYRESPONSE                         | OK  
+4    | MAC_DATA_REQUEST          | EMPTYRESPONSE                                         | EMPTYRESPONSE                         | OK  
+5    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE                         | OK  
+6    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE                                         | EMPTYRESPONSE                         | OK  
+7    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY             | OK  
+8    | NWK_REJOIN_REQUEST_SECURE | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | EMPTYRESPONSE                         | DIFF
+9    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                | APS_CMD_TRANSPORT_TCLK                | OK  
+10   | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | NWK_REJOIN_RESPONSE_FAILURE(status=2) | OK  
+
+========================================================================================================================
+Refinement block #3
+Inputs: 17, SUL outputs: 17, HYP outputs: 17, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                          | HYP                                                          | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+2    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+3    | MAC_DATA_REQUEST          | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | OK  
+4    | APS_VERIFY_GLOBAL_KEY     | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+5    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+6    | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+7    | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+8    | MAC_DATA_REQUEST          | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+9    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+10   | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                                   | OK  
+11   | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+12   | MAC_DATA_REQUEST          | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+13   | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                                   | OK  
+14   | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+15   | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+16   | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | APS_ACK                                                      | DIFF
+17   | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+
+========================================================================================================================
+Refinement block #4
+Inputs: 11, SUL outputs: 11, HYP outputs: 11, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                   | HYP                                   | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY             | APS_CMD_TRANSPORT_NWK_KEY             | OK  
+2    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY             | APS_CMD_TRANSPORT_NWK_KEY             | OK  
+3    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                | APS_CMD_TRANSPORT_TCLK                | OK  
+4    | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_FAILURE(status=2) | NWK_REJOIN_RESPONSE_FAILURE(status=2) | OK  
+5    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)            | MAC_BEACON(assoc_permit=1)            | OK  
+6    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                | APS_CMD_TRANSPORT_TCLK                | OK  
+7    | APS_VERIFY_TCLK           | EMPTYRESPONSE                         | APS_ACK                               | DIFF
+8    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)            | MAC_BEACON(assoc_permit=1)            | OK  
+9    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                | APS_CMD_TRANSPORT_TCLK                | OK  
+10   | NWK_REJOIN_REQUEST_SECURE | EMPTYRESPONSE                         | EMPTYRESPONSE                         | OK  
+11   | MAC_DATA_REQUEST          | EMPTYRESPONSE                         | EMPTYRESPONSE                         | OK  
+
+========================================================================================================================
+Refinement block #5
+Inputs: 10, SUL outputs: 10, HYP outputs: 10, mismatches: 3
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                          | HYP                                                          | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+2    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+3    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+4    | MAC_DATA_REQUEST          | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | OK  
+5    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+6    | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+7    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+8    | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | APS_ACK                                                      | DIFF
+9    | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | APS_ACK                                                      | DIFF
+10   | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_FAILURE(status=2)                        | DIFF
+
+========================================================================================================================
+Refinement block #6
+Inputs: 8, SUL outputs: 8, HYP outputs: 8, mismatches: 2
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                   | HYP                                                   | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY                             | OK  
+2    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1)                            | OK  
+3    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                | APS_CMD_TRANSPORT_TCLK                                | OK  
+4    | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | OK  
+5    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+6    | NWK_REJOIN_REQUEST_SECURE | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | OK  
+7    | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                             | APS_ACK                                               | DIFF
+8    | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_SUCCESS                           | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | DIFF
+
+========================================================================================================================
+Refinement block #7
+Inputs: 14, SUL outputs: 14, HYP outputs: 14, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                          | HYP                                                          | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+2    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+3    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+4    | MAC_DATA_REQUEST          | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | OK  
+5    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+6    | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+7    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                                   | OK  
+8    | NWK_REJOIN_REQUEST_SECURE | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS        | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS        | OK  
+9    | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+10   | MAC_DATA_REQUEST          | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+11   | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+12   | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+13   | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+14   | MAC_DATA_REQUEST          | MAC_ASSOCIATION_RESPONSE(status=0)                           | EMPTYRESPONSE                                                | DIFF
+
+========================================================================================================================
+Refinement block #8
+Inputs: 17, SUL outputs: 17, HYP outputs: 17, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                   | HYP                                                   | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY                             | OK  
+2    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                | APS_CMD_TRANSPORT_TCLK                                | OK  
+3    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+4    | APS_VERIFY_TCLK           | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+5    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+6    | APS_VERIFY_TCLK           | EMPTYRESPONSE                                         | APS_ACK                                               | DIFF
+7    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY                             | OK  
+8    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+9    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY                             | OK  
+10   | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+11   | NWK_REJOIN_REQUEST_SECURE | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | OK  
+12   | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | OK  
+13   | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1)                            | OK  
+14   | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                           | NWK_REJOIN_RESPONSE_SUCCESS                           | OK  
+15   | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                           | NWK_REJOIN_RESPONSE_SUCCESS                           | OK  
+16   | MAC_DATA_REQUEST          | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+17   | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                           | NWK_REJOIN_RESPONSE_SUCCESS                           | OK  
+
+========================================================================================================================
+Refinement block #9
+Inputs: 14, SUL outputs: 14, HYP outputs: 14, mismatches: 2
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                   | HYP                                                   | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY                             | OK  
+2    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+3    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+4    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1)                            | OK  
+5    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY                             | OK  
+6    | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | OK  
+7    | NWK_REJOIN_REQUEST_SECURE | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | OK  
+8    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1)                            | OK  
+9    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE                                         | OK  
+10   | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1)                            | OK  
+11   | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                | APS_CMD_TRANSPORT_TCLK                                | OK  
+12   | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                             | EMPTYRESPONSE                                         | DIFF
+13   | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1)                            | OK  
+14   | NWK_REJOIN_REQUEST_TC     | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | NWK_REJOIN_RESPONSE_FAILURE(status=2)                 | DIFF
+
+========================================================================================================================
+Refinement block #10
+Inputs: 9, SUL outputs: 9, HYP outputs: 9, mismatches: 2
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                   | HYP                        | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | NWK_REJOIN_REQUEST_TC     | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+2    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1) | OK  
+3    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+4    | NWK_REJOIN_REQUEST_SECURE | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+5    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+6    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY  | OK  
+7    | NWK_REJOIN_REQUEST_SECURE | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | EMPTYRESPONSE              | DIFF
+8    | APS_VERIFY_GLOBAL_KEY     | APS_CONFIRM_KEY(status=0)                             | EMPTYRESPONSE              | DIFF
+9    | MAC_DATA_REQUEST          | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+
+========================================================================================================================
+Refinement block #11
+Inputs: 10, SUL outputs: 10, HYP outputs: 10, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                   | HYP                        | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+2    | NWK_REJOIN_REQUEST_TC     | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+3    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1) | OK  
+4    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1) | OK  
+5    | MAC_DATA_REQUEST          | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+6    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                            | MAC_BEACON(assoc_permit=1) | OK  
+7    | NWK_REJOIN_REQUEST_TC     | EMPTYRESPONSE                                         | EMPTYRESPONSE              | OK  
+8    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                             | APS_CMD_TRANSPORT_NWK_KEY  | OK  
+9    | NWK_REJOIN_REQUEST_SECURE | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | EMPTYRESPONSE              | DIFF
+10   | APS_VERIFY_TCLK           | APS_ACK                                               | APS_ACK                    | OK  
+
+========================================================================================================================
+Refinement block #12
+Inputs: 12, SUL outputs: 12, HYP outputs: 12, mismatches: 2
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                   | SUL                                                          | HYP                                                          | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | MAC_ASSOCIATION_REQUEST | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+2    | MAC_DATA_REQUEST        | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | OK  
+3    | MAC_ASSOCIATION_REQUEST | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+4    | APS_REQUEST_TCLK        | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+5    | APS_VERIFY_TCLK         | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+6    | APS_VERIFY_TCLK         | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+7    | MAC_ASSOCIATION_REQUEST | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+8    | MAC_DATA_REQUEST        | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | EMPTYRESPONSE                                                | DIFF
+9    | MAC_BEACON_REQUEST      | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                                   | OK  
+10   | MAC_DATA_REQUEST        | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+11   | MAC_BEACON_REQUEST      | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                                   | OK  
+12   | NWK_REJOIN_REQUEST_TC   | NWK_REJOIN_RESPONSE_SUCCESS                                  | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS        | DIFF
+
+========================================================================================================================
+Refinement block #13
+Inputs: 21, SUL outputs: 21, HYP outputs: 21, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                   | SUL                                                          | HYP                                                          | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | MAC_ASSOCIATION_REQUEST | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+2    | NWK_REJOIN_REQUEST_TC   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+3    | APS_VERIFY_GLOBAL_KEY   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+4    | APS_REQUEST_NWK_KEY     | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+5    | MAC_ASSOCIATION_REQUEST | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+6    | MAC_DATA_REQUEST        | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | OK  
+7    | MAC_ASSOCIATION_REQUEST | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+8    | APS_REQUEST_NWK_KEY     | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+9    | NWK_REJOIN_REQUEST_TC   | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+10   | APS_REQUEST_NWK_KEY     | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+11   | APS_VERIFY_TCLK         | APS_ACK                                                      | APS_CONFIRM_KEY(status=0)                                    | DIFF
+12   | APS_VERIFY_GLOBAL_KEY   | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+13   | MAC_DATA_REQUEST        | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+14   | MAC_DATA_REQUEST        | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+15   | APS_REQUEST_TCLK        | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+16   | MAC_ASSOCIATION_REQUEST | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+17   | MAC_BEACON_REQUEST      | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                                   | OK  
+18   | MAC_BEACON_REQUEST      | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                                   | OK  
+19   | NWK_REJOIN_REQUEST_TC   | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+20   | APS_VERIFY_TCLK         | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+21   | APS_VERIFY_TCLK         | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+
+========================================================================================================================
+Refinement block #14
+Inputs: 14, SUL outputs: 14, HYP outputs: 14, mismatches: 1
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                          | HYP                                                          | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+2    | NWK_REJOIN_REQUEST_SECURE | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+3    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+4    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+5    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+6    | MAC_DATA_REQUEST          | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | OK  
+7    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+8    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+9    | MAC_DATA_REQUEST          | MAC_ASSOCIATION_RESPONSE(status=0)                           | EMPTYRESPONSE                                                | DIFF
+10   | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+11   | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+12   | MAC_DATA_REQUEST          | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+13   | APS_VERIFY_GLOBAL_KEY     | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+14   | MAC_DATA_REQUEST          | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+
+========================================================================================================================
+Refinement block #15
+Inputs: 26, SUL outputs: 26, HYP outputs: 26, mismatches: 3
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                          | HYP                                                          | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+2    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+3    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+4    | MAC_DATA_REQUEST          | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | OK  
+5    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+6    | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_FAILURE(status=2)                        | NWK_REJOIN_RESPONSE_FAILURE(status=2)                        | OK  
+7    | APS_VERIFY_GLOBAL_KEY     | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+8    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+9    | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+10   | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+11   | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+12   | APS_VERIFY_GLOBAL_KEY     | APS_CONFIRM_KEY(status=0)                                    | EMPTYRESPONSE                                                | DIFF
+13   | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+14   | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | EMPTYRESPONSE                                                | DIFF
+15   | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+16   | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | EMPTYRESPONSE                                                | DIFF
+17   | APS_REQUEST_TCLK          | APS_CMD_TRANSPORT_TCLK                                       | APS_CMD_TRANSPORT_TCLK                                       | OK  
+18   | NWK_REJOIN_REQUEST_SECURE | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS        | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS        | OK  
+19   | NWK_REJOIN_REQUEST_TC     | NWK_REJOIN_RESPONSE_SUCCESS                                  | NWK_REJOIN_RESPONSE_SUCCESS                                  | OK  
+20   | APS_VERIFY_TCLK           | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+21   | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+22   | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                                   | OK  
+23   | APS_VERIFY_GLOBAL_KEY     | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                                    | OK  
+24   | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+25   | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                                    | OK  
+26   | MAC_DATA_REQUEST          | EMPTYRESPONSE                                                | EMPTYRESPONSE                                                | OK  
+
+========================================================================================================================
+Refinement block #16
+Inputs: 11, SUL outputs: 11, HYP outputs: 11, mismatches: 2
+------------------------------------------------------------------------------------------------------------------------
+Step | Input                     | SUL                                                          | HYP                                                   | Cmp 
+------------------------------------------------------------------------------------------------------------------------
+1    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                         | OK  
+2    | NWK_REJOIN_REQUEST_SECURE | EMPTYRESPONSE                                                | EMPTYRESPONSE                                         | OK  
+3    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE                                                | EMPTYRESPONSE                                         | OK  
+4    | APS_VERIFY_GLOBAL_KEY     | EMPTYRESPONSE                                                | EMPTYRESPONSE                                         | OK  
+5    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                         | OK  
+6    | MAC_DATA_REQUEST          | APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) | EMPTYRESPONSE                                         | DIFF
+7    | MAC_ASSOCIATION_REQUEST   | EMPTYRESPONSE                                                | EMPTYRESPONSE                                         | OK  
+8    | APS_REQUEST_NWK_KEY       | APS_CMD_TRANSPORT_NWK_KEY                                    | APS_CMD_TRANSPORT_NWK_KEY                             | OK  
+9    | MAC_BEACON_REQUEST        | MAC_BEACON(assoc_permit=1)                                   | MAC_BEACON(assoc_permit=1)                            | OK  
+10   | NWK_REJOIN_REQUEST_SECURE | NWK_REJOIN_RESPONSE_SUCCESS                                  | APS_CMD_TRANSPORT_NWK_KEY+NWK_REJOIN_RESPONSE_SUCCESS | DIFF
+11   | APS_VERIFY_GLOBAL_KEY     | APS_CONFIRM_KEY(status=0)                                    | APS_CONFIRM_KEY(status=0)                             | OK  
+

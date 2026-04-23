@@ -60,6 +60,8 @@ def build_zdo_extended_address_payload(self):
         nwk_addr.to_bytes(2, "little")
     )
 
+    return zdo_payload
+
 def build_zdo_active_endpoint_response(self):
     tsn = getattr(self, "last_zdo_tsn", self.sequence_numbers["zdo_tsn"] & 0xFF)
     dst_addr = getattr(self, "last_zdo_request_src", self.config["coord_addr"])
@@ -175,8 +177,8 @@ PACKET_TEMPLATES = {
                                                         alternate_pan_coordinator=0,
                                                         power_source=1,
                                                         receiver_on_when_idle=1,
-                                                        device_type=1,
-                                                        security_capability=0,
+                                                        device_type=0,
+                                                        security_capability=1,
                                                         allocate_address=1
                                                     ),
     'MAC_ASSOCIATION_RESPONSE':         lambda self: Dot15d4(fcf_frametype = 1)
@@ -351,8 +353,8 @@ PACKET_TEMPLATES = {
                                                         src_addr=self.config["short_address"]
                                                     )/ ZigbeeNWK(
                                                         frametype = 0,
+                                                        flags=["extended_src"],
                                                         destination=self.config["coord_addr"],
-                                                        flags=0x12,
                                                         source=self.config["short_address"],
                                                         ext_src=self.config["ieee_address"],
                                                         radius=30,
@@ -360,7 +362,7 @@ PACKET_TEMPLATES = {
                                                     )/ ZigbeeAppDataPayload(
                                                         aps_frametype=1,
                                                         delivery_mode=0,
-                                                        frame_control=6,
+                                                        frame_control=['security', 'ack_req'],
                                                         counter=self.sequence_numbers["aps_seq"] & 0xFF
                                                     )/ ZigbeeAppCommandPayload(
                                                         cmd_identifier=0x08,
@@ -521,12 +523,12 @@ PACKET_TEMPLATES = {
                                                         # ext_dst=self.config["coord_ieee"]
                                                     ) / ZigbeeNWKCommandPayload(
                                                         cmd_identifier="rejoin request",
-                                                        security_capability=0,
-                                                        allocate_address=1,
+                                                        alternate_pan_coordinator=0,
+                                                        power_source=1,
+                                                        receiver_on_when_idle=1,
                                                         device_type=0,
-                                                        power_source=0,
-                                                        receiver_on_when_idle=0,
-                                                        alternate_pan_coordinator=0
+                                                        security_capability=0,
+                                                        allocate_address=1
                                                     ),
 
     'NWK_REJOIN_REQUEST_SECURE':               lambda self: Dot15d4(
@@ -556,8 +558,8 @@ PACKET_TEMPLATES = {
                                                         alternate_pan_coordinator=0,
                                                         power_source=1,
                                                         receiver_on_when_idle=1,
-                                                        device_type=1,
-                                                        security_capability=0,
+                                                        device_type=0,
+                                                        security_capability=1,
                                                         allocate_address=1
                                                     ),
 

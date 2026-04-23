@@ -25,7 +25,7 @@ class ZigbeeSUL:
             "pan_id": 0xFFFF,
             "coord_addr": 0xFFFF,
             #TODO: Save the coordinator's IEEE address dynamically
-            "coord_ieee": 0x6c63696c63696c63,
+            # "coord_ieee": 0x6c63696c63696c63,
             "short_address": 0xFFFE,
             "ieee_address": 0x79bc000000010002,
             "tc_global_key": bytes([90,105,103,66,101,101,65,108,108,105,97,110,99,101,48,57]),
@@ -140,7 +140,7 @@ class ZigbeeSUL:
         self.driver.inject_air_frame_with_meta(bytes(pkt))
 
 
-    def receive(self, pkt, max_pkts=1, timeout=6.0):
+    def receive(self, pkt, max_pkts=1, timeout=17.0):
         packets = []
         time_start = time.time()
         time_now = time_start

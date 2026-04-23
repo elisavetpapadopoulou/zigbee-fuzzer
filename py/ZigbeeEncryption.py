@@ -139,8 +139,10 @@ def aps_encrypt(self, pkt):
     if self.config["tc_link_key"]:
         # print("HURRAY!! Using TC Link Key for APS encryption")
         tc_key = self.config["tc_link_key"]
+        log.encrypt_ok("[APS] encrypted with TCLK")
     else:
         tc_key = self.config["tc_global_key"]
+        log.encrypt_ok("[APS] encrypted with TC Global Key")
 
     ccm = AES.new(tc_key, AES.MODE_CCM, nonce=nonce, mac_len=4)
     ccm.update(aad)
@@ -157,7 +159,6 @@ def aps_encrypt(self, pkt):
     mac, ll = _mk_mac_ll(pkt)
     nwk = pkt[ZigbeeNWK].copy(); nwk.remove_payload()
     aps_pkt = mac / ll / nwk / Raw(aps_pdu_bytes)
-    log.encrypt_ok("[APS] encrypted")
     return aps_pkt, aps_pdu_bytes
 
 def nwk_encrypt(self, pkt, aps_pdu_bytes):
@@ -386,8 +387,7 @@ def zigbee_mmo_hash(self, message):
 
 
 def decrypt_all(self, pkt):
-    log.info("Attempting to decrypt packet with security header...")
-    # print(bytes(pkt).hex())
+    log.info("     decrypt attempt")
     for _ in range(2):
         owner = _sec_owner(pkt)
         if owner is None:
@@ -395,26 +395,10 @@ def decrypt_all(self, pkt):
         plaintext, key_id = decrypt(self, pkt)
         if plaintext is None:
             return None
-        # TODO: Return decoded pkt and let _post handlers extract the information
         if owner is ZigbeeNWK:
             pkt = rebuild_plain_nwk(pkt, plaintext)
-            # if is_nwk_link_status(pkt):
-            #     return None
         elif owner is ZigbeeAppDataPayload:
             pkt = rebuild_plain_aps(pkt, plaintext)
-            # aps_cmd = pkt.getlayer(ZigbeeAppCommandPayload)
-            # if aps_cmd:
-            #     cmd_id = getattr(aps_cmd, "cmd_identifier", -1)
-            #     if cmd_id == 0x05:
-            #         transported_key = getattr(aps_cmd, "key_type", -1)
-            #         key_bytes = bytes(getattr(aps_cmd, "key", b""))
-            #         if key_bytes:
-            #             if transported_key == 0x01:
-            #                 self.config["network_key"] = {aps_cmd.key_seqnum: key_bytes}
-            #             elif transported_key == 0x04:
-            #                 self.config["tc_link_key"] = key_bytes
-            # else:
-            #     break
     log.decrypt_ok("Decryption successful")
     return Dot15d4(bytes(pkt))
 
