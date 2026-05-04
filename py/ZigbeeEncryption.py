@@ -3,7 +3,7 @@ import struct
 
 import prettylog as log
 from scapy.all import conf, raw
-from scapy.layers.dot15d4 import Dot15d4, Dot15d4Data
+from scapy.layers.dot15d4 import Dot15d4, Dot15d4FCS, Dot15d4Data
 from scapy.layers.zigbee import ZigbeeAppDataPayload, ZigbeeNWK, ZigbeeNWKCommandPayload, ZigbeeSecurityHeader, ZigbeeAppCommandPayload
 from scapy.packet import Raw
 
@@ -29,10 +29,10 @@ def _sec_owner(pkt):
         return None
     return type(sec.underlayer)
 
-def _mk_mac_ll(pkt):
-    mac0 = pkt[Dot15d4]
+def _mk_mac_ll(pkt, dot15d4_layer=Dot15d4):
+    mac0 = pkt[dot15d4_layer]
     ll0  = pkt[Dot15d4Data]
-    mac = Dot15d4(
+    mac = dot15d4_layer(
         fcf_frametype     = mac0.fcf_frametype,
         fcf_security      = mac0.fcf_security,
         fcf_ackreq        = mac0.fcf_ackreq,
@@ -60,12 +60,12 @@ def is_nwk_link_status(pkt_plain):
     log.warn("Ignoring NWK_LINK_STATUS")
     return cmd_id == 0x08
 
-def rebuild_plain_nwk(pkt, plaintext: bytes):
+def rebuild_plain_nwk(pkt, plaintext: bytes, dot15d4_layer=Dot15d4):
         """
         Remove ZigbeeSecurityHeader and attach the decrypted NWK payload (pt).
         Try to parse it as APS (most common), else NWK command, else Raw.
         """
-        mac = pkt[Dot15d4].copy()
+        mac = pkt[dot15d4_layer].copy()
         mac.remove_payload()
         ll  = pkt[Dot15d4Data].copy()
         ll.remove_payload()
@@ -82,12 +82,12 @@ def rebuild_plain_nwk(pkt, plaintext: bytes):
             decrypted_layer = Raw(plaintext)
         return mac / ll / nwk / decrypted_layer
 
-def rebuild_plain_aps(pkt, plaintext: bytes):
+def rebuild_plain_aps(pkt, plaintext: bytes, dot15d4_layer=Dot15d4):
     """
     Return a new packet:
-      Dot15d4 / NWK / APS(with security bit cleared) / <decrypted layer>
+      self.general_config["dot15d4_layer"] / NWK / APS(with security bit cleared) / <decrypted layer>
     """
-    mac = pkt[Dot15d4].copy()
+    mac = pkt[dot15d4_layer].copy()
     mac.remove_payload()
     ll  = pkt[Dot15d4Data].copy()
     ll.remove_payload()
@@ -140,6 +140,9 @@ def aps_encrypt(self, pkt):
         # print("HURRAY!! Using TC Link Key for APS encryption")
         tc_key = self.config["tc_link_key"]
         log.encrypt_ok("[APS] encrypted with TCLK")
+    elif self.config["preconf_link_key"]:
+        tc_key = self.config["preconf_link_key"]
+        log.encrypt_ok("[APS] encrypted with Preconf Link Key")
     else:
         tc_key = self.config["tc_global_key"]
         log.encrypt_ok("[APS] encrypted with TC Global Key")
@@ -156,7 +159,7 @@ def aps_encrypt(self, pkt):
     aps_pdu_bytes = aps_hdr_b + aps_aux_b + C + U
 
     # Build packet for next step with fresh MAC/LL and a clean NWK header
-    mac, ll = _mk_mac_ll(pkt)
+    mac, ll = _mk_mac_ll(pkt, dot15d4_layer=self.general_config["dot15d4_layer"])
     nwk = pkt[ZigbeeNWK].copy(); nwk.remove_payload()
     aps_pkt = mac / ll / nwk / Raw(aps_pdu_bytes)
     return aps_pkt, aps_pdu_bytes
@@ -166,7 +169,7 @@ def nwk_encrypt(self, pkt, aps_pdu_bytes):
     nwk_key = self.config["network_key"][key_seqnum]
     my_eui64 = self.config["ieee_address"]
 
-    mac, ll = _mk_mac_ll(pkt)
+    mac, ll = _mk_mac_ll(pkt, dot15d4_layer=self.general_config["dot15d4_layer"])
 
     nwk0 = pkt[ZigbeeNWK]
 
@@ -240,11 +243,13 @@ def decrypt(self, pkt):
     key_seqnum = sec.key_seqnum
     key = ""
 
-    if not self.config["tc_link_key"]:
+    if self.config["tc_link_key"]:
         # print("No TCLK here")
-        tc_key = self.config["tc_global_key"]
-    else:
         tc_key = self.config["tc_link_key"]
+    elif self.config["preconf_link_key"]:
+        tc_key = self.config["preconf_link_key"]
+    else:
+        tc_key = self.config["tc_global_key"]
 
     if key_id == 1:
         if self.config["network_key"] != {}:
@@ -396,11 +401,11 @@ def decrypt_all(self, pkt):
         if plaintext is None:
             return None
         if owner is ZigbeeNWK:
-            pkt = rebuild_plain_nwk(pkt, plaintext)
+            pkt = rebuild_plain_nwk(pkt, plaintext, dot15d4_layer=self.general_config["dot15d4_layer"])
         elif owner is ZigbeeAppDataPayload:
-            pkt = rebuild_plain_aps(pkt, plaintext)
+            pkt = rebuild_plain_aps(pkt, plaintext, dot15d4_layer=self.general_config["dot15d4_layer"])
     log.decrypt_ok("Decryption successful")
-    return Dot15d4(bytes(pkt))
+    return self.general_config["dot15d4_layer"](bytes(pkt))
 
 
 

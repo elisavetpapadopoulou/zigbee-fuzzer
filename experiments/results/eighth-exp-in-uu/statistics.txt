@@ -1,0 +1,81 @@
+=== RUN DESCRIPTION ===
+Alphabet: [MAC_BEACON_REQUEST, MAC_ASSOCIATION_REQUEST, NWK_REJOIN_REQUEST_TC, NWK_REJOIN_REQUEST_SECURE, APS_REQUEST_TCLK, APS_REQUEST_NWK_KEY, APS_VERIFY_TCLK, APS_VERIFY_GLOBAL_KEY]
+
+StateFuzzerConfig Parameters
+Help: false
+Debug: false
+Quiet: false
+Output Directory: experiments/results/eighth-exp-in-uu
+Fuzzing Client: false
+
+LearnerConfig Parameters
+Alphabet: experiments/alphabets/association-nwkEntering.xml
+Learning Algorithm: TTT
+Equivalence Algorithms: [RANDOM_WP_METHOD]
+Max Depth: 1
+Min Length: 5
+Max Length: 15
+Max Equivalence Queries: 3000
+Runs Per Membership Query: 1
+Random Length: 5
+Membership Query Retries: 3
+Log Queries: true
+Prob Reset: 0.0
+Test File: null
+Seed: 0
+Cache Tests: false
+Ce Sanitization: true
+Skip Non Det Tests: false
+Ce Reruns: 3
+Probabilistic Sanitization: true
+Time Limit: null
+Test Limit: null
+Round Limit: null
+IOMode: true
+Probability of Choosing a New DataValue: 0.1
+Max Runs: 1
+Max Depth for Register Automata: 1
+Reset Runs: true
+Seed transitions: true
+Draw symbols uniformly: true
+
+SulServerConfigZigbee Parameters
+Zigbee Adapter: localhost:6000
+Mapper: null
+Target addr: EB:D8:6B:33:90:0B
+
+MapperConfig Parameters
+Mapper Connection Config: null
+Repeating Outputs: null
+Socket Closed as Timeout: false
+Disabled as Timeout: false
+Merge Repeating: false
+
+SulAdapterConfig Parameters
+Adapter Port: null
+Adapter Address: localhost
+
+=== STATISTICS ===
+Learning finished: true
+Size of the input alphabet: 8
+Number of states: 7
+Number of hypotheses: 6
+Number of inputs: 39862
+Number of tests: 3225
+Number of learning inputs: 614
+Number of learning tests: 179
+Number of inputs up to last hypothesis: 1084
+Number of tests up to last hypothesis: 225
+Time (ms) to learn model: 264502129
+Counterexamples:
+CE 1:Query[ε|APS_VERIFY_TCLK MAC_ASSOCIATION_REQUEST APS_REQUEST_TCLK APS_REQUEST_NWK_KEY NWK_REJOIN_REQUEST_TC APS_REQUEST_TCLK NWK_REJOIN_REQUEST_TC APS_VERIFY_GLOBAL_KEY MAC_BEACON_REQUEST NWK_REJOIN_REQUEST_TC NWK_REJOIN_REQUEST_TC / EMPTYRESPONSE APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) APS_CMD_TRANSPORT_TC_LINK_KEY APS_CMD_TRANSPORT_NWK_KEY NWK_REJOIN_RESPONSE_FAILURE(status=2) APS_CMD_TRANSPORT_TC_LINK_KEY NWK_REJOIN_RESPONSE_FAILURE(status=2) APS_CONFIRM_KEY(status=0) MAC_BEACON NWK_REJOIN_RESPONSE_SUCCESS NWK_REJOIN_RESPONSE_SUCCESS]
+CE 2:Query[ε|APS_REQUEST_NWK_KEY APS_REQUEST_TCLK NWK_REJOIN_REQUEST_SECURE MAC_ASSOCIATION_REQUEST APS_REQUEST_TCLK APS_VERIFY_GLOBAL_KEY APS_REQUEST_TCLK MAC_ASSOCIATION_REQUEST / APS_CMD_TRANSPORT_NWK_KEY APS_CMD_TRANSPORT_TC_LINK_KEY EMPTYRESPONSE APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) APS_CMD_TRANSPORT_TC_LINK_KEY APS_CONFIRM_KEY(status=0) APS_CMD_TRANSPORT_TC_LINK_KEY MAC_ASSOCIATION_RESPONSE(status=0)]
+CE 3:Query[ε|MAC_ASSOCIATION_REQUEST APS_VERIFY_GLOBAL_KEY APS_REQUEST_NWK_KEY APS_REQUEST_TCLK APS_VERIFY_TCLK MAC_BEACON_REQUEST APS_REQUEST_TCLK APS_VERIFY_GLOBAL_KEY MAC_ASSOCIATION_REQUEST / APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) APS_CONFIRM_KEY(status=0) APS_CMD_TRANSPORT_NWK_KEY APS_CMD_TRANSPORT_TC_LINK_KEY APS_CONFIRM_KEY(status=0) MAC_BEACON APS_CMD_TRANSPORT_TC_LINK_KEY APS_CONFIRM_KEY(status=0) MAC_ASSOCIATION_RESPONSE(status=0)]
+CE 4:Query[ε|MAC_ASSOCIATION_REQUEST APS_REQUEST_NWK_KEY APS_REQUEST_TCLK APS_REQUEST_NWK_KEY NWK_REJOIN_REQUEST_TC NWK_REJOIN_REQUEST_TC APS_VERIFY_TCLK MAC_ASSOCIATION_REQUEST NWK_REJOIN_REQUEST_SECURE / APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) APS_CMD_TRANSPORT_NWK_KEY APS_CMD_TRANSPORT_TC_LINK_KEY APS_CMD_TRANSPORT_NWK_KEY NWK_REJOIN_RESPONSE_FAILURE(status=2) NWK_REJOIN_RESPONSE_FAILURE(status=2) APS_CONFIRM_KEY(status=0) MAC_ASSOCIATION_RESPONSE(status=0) NWK_REJOIN_RESPONSE_SUCCESS]
+CE 5:Query[ε|MAC_BEACON_REQUEST APS_REQUEST_NWK_KEY APS_VERIFY_GLOBAL_KEY NWK_REJOIN_REQUEST_SECURE MAC_BEACON_REQUEST APS_REQUEST_TCLK NWK_REJOIN_REQUEST_TC NWK_REJOIN_REQUEST_TC APS_REQUEST_TCLK MAC_ASSOCIATION_REQUEST APS_VERIFY_TCLK / MAC_BEACON APS_CMD_TRANSPORT_NWK_KEY EMPTYRESPONSE EMPTYRESPONSE MAC_BEACON APS_CMD_TRANSPORT_TC_LINK_KEY NWK_REJOIN_RESPONSE_FAILURE(status=2) NWK_REJOIN_RESPONSE_FAILURE(status=2) APS_CMD_TRANSPORT_TC_LINK_KEY APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0) APS_CONFIRM_KEY(status=0)]
+Number of inputs when hypothesis was generated: [8, 159, 357, 548, 771, 1084]
+Number of tests when hypothesis was generated: [8, 50, 93, 130, 174, 225]
+Time (ms) when hypothesis was generated: [129741, 1524835, 3131081, 4708714, 6580385, 8852195]
+Number of inputs when counterexample was found: [52, 274, 407, 633, 947]
+Number of tests when counterexample was found: [12, 63, 99, 138, 189]
+Time (ms) when counterexample was found: [412394, 2343206, 3499889, 5303989, 7760268]

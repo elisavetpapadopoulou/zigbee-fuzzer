@@ -8,9 +8,6 @@ dot15d4.conf.dot15d4_protocol = "zigbee"
 dot15d4.conf.dot15d4_fcs = False
 
 
-RPIPE = "/tmp/zt2.write"
-WPIPE = "/tmp/zt2.read"
-
 def _open_nonblock(path, flags):
     while True:
         try:
@@ -35,8 +32,8 @@ def _read_exact(fd, n):
             time.sleep(0.01)
     return bytes(buf)
 
-class zbossSimulatorDriver:
-    def __init__(self, rpipe=RPIPE, wpipe=WPIPE):
+class ZbossSimulatorDriver:
+    def __init__(self, rpipe, wpipe):
         self.fd_w = os.open(wpipe, os.O_WRONLY)
         self.wpipe = wpipe
         self.rpipe = rpipe
@@ -70,6 +67,9 @@ class zbossSimulatorDriver:
                 os.write(self.fd_w, bytes([L]) + frame_bytes)
             except BrokenPipeError as e:
                 raise ConnectionError("writer pipe disconnected") from e 
+
+    def inject_air_frame_with_meta(self, frame_bytes):
+        self.send_raw(frame_bytes)
 
     def send_pkt(self, pkt):
         raw = bytes(pkt)

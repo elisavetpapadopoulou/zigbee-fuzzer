@@ -1,0 +1,12 @@
+state-fuzzer-server
+-output
+experiments/results/eighth-exp-in-uu
+-alphabet
+experiments/alphabets/association-nwkEntering.xml
+-equivalenceQueryBound
+3000
+-logQueries
+-adapter
+localhost:6000
+-connect
+EB:D8:6B:33:90:0B

@@ -3,7 +3,6 @@ from scapy.layers.dot15d4 import *
 from scapy.layers.zigbee import *
 from scapy.packet import Raw
 
-from ZigbeeEncryption import zigbee_hmac
 
 def build_zdo_node_descriptor_payload(self):
     tsn = getattr(self, "last_zdo_tsn", self.sequence_numbers["zdo_tsn"] & 0xFF)
@@ -46,9 +45,6 @@ def build_zdo_node_descriptor_payload(self):
 def build_zdo_extended_address_payload(self):
     tsn = getattr(self, "last_zdo_tsn", self.sequence_numbers["zdo_tsn"] & 0xFF)
 
-    # Usually the requester is the coordinator, but better if you stored the actual source
-    dst_addr = getattr(self, "last_zdo_request_src", self.config["coord_addr"])
-
     status = 0x00
     ieee_addr = self.config["ieee_address"]
     nwk_addr = self.config["short_address"]
@@ -64,11 +60,9 @@ def build_zdo_extended_address_payload(self):
 
 def build_zdo_active_endpoint_response(self):
     tsn = getattr(self, "last_zdo_tsn", self.sequence_numbers["zdo_tsn"] & 0xFF)
-    dst_addr = getattr(self, "last_zdo_request_src", self.config["coord_addr"])
 
     nwk_addr = self.config["short_address"]
 
-    # Minimal endpoint list: pretend we have endpoint 1
     active_eps = [1]
 
     zdo_payload = (
@@ -116,9 +110,6 @@ def build_zdo_simple_descriptor_response(self):
     return zdo_payload
 
 def build_zcl_read_attributes_payload(self):
-    dst_addr = getattr(self, "last_zcl_request_src", self.config["coord_addr"])
-    src_ep = getattr(self, "last_zcl_dst_endpoint", 1)
-    dst_ep = getattr(self, "last_zcl_src_endpoint", 1)
     zcl_seq = getattr(self, "last_zcl_seq", 0)
 
     manufacturer_name = b"TestVendor"
@@ -157,10 +148,10 @@ def build_zcl_read_attributes_payload(self):
 
 
 PACKET_TEMPLATES = {
-    'MAC_BEACON':                       lambda self: Dot15d4(fcf_frametype = 0)
+    'MAC_BEACON':                       lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 0)
                                                     / Dot15d4Beacon(),
 
-    'MAC_ASSOCIATION_REQUEST':          lambda self: Dot15d4(
+    'MAC_ASSOCIATION_REQUEST':          lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=3,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -181,11 +172,11 @@ PACKET_TEMPLATES = {
                                                         security_capability=1,
                                                         allocate_address=1
                                                     ),
-    'MAC_ASSOCIATION_RESPONSE':         lambda self: Dot15d4(fcf_frametype = 1)
+    'MAC_ASSOCIATION_RESPONSE':         lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 1)
                                                     / Dot15d4Data()
                                                     / Dot15d4Cmd(cmd_id = 2)
                                                     / Dot15d4CmdAssocResp(),
-    'MAC_DISASSOCIATION_NOTIFY':    lambda self: Dot15d4(
+    'MAC_DISASSOCIATION_NOTIFY':    lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=3,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -200,7 +191,7 @@ PACKET_TEMPLATES = {
                                                         cmd_id=0x03
                                                     )/Dot15d4CmdDisassociation(),
 
-    'MAC_DATA_REQUEST':                 lambda self: Dot15d4(
+    'MAC_DATA_REQUEST':                 lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=3,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -214,7 +205,7 @@ PACKET_TEMPLATES = {
                                                         dest_addr=self.config["coord_addr"],
                                                         src_addr=self.config["ieee_address"]
                                                     ),
-    'MAC_PAN_ID_CONFLICT_NOTIFY':           lambda self: Dot15d4(
+    'MAC_PAN_ID_CONFLICT_NOTIFY':           lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=3,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -229,7 +220,7 @@ PACKET_TEMPLATES = {
                                                         cmd_id=0x05
                                                     ),
 
-    'MAC_ORPHAN_NOTIFY':                lambda self: Dot15d4(
+    'MAC_ORPHAN_NOTIFY':                lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=3,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -244,7 +235,7 @@ PACKET_TEMPLATES = {
                                                         cmd_id=0x06
                                                     ),
 
-    'MAC_BEACON_REQUEST':               lambda self: Dot15d4(
+    'MAC_BEACON_REQUEST':               lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_panidcompress=0,
                                                         fcf_ackreq=1,
                                                         fcf_security=0,
@@ -259,11 +250,11 @@ PACKET_TEMPLATES = {
                                                         dest_addr = self.config["coord_addr"],
                                                         # src_addr = self.config["ieee_address"]
                                                     ),
-    'MAC_COORDINATOR_REALIGN':          lambda self: Dot15d4(fcf_frametype = 1)
+    'MAC_COORDINATOR_REALIGN':          lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 1)
                                                     / Dot15d4Data()
                                                     / Dot15d4Cmd(cmd_id = 8)
                                                     / Dot15d4CmdCoordRealign(),
-    'MAC_GTS_REQUEST':                  lambda self: Dot15d4(
+    'MAC_GTS_REQUEST':                  lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=3,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -278,15 +269,15 @@ PACKET_TEMPLATES = {
                                                         cmd_id=0x09
                                                     )/Dot15d4CmdGTSReq(),
 
-    'MAC_ACK':                          lambda self: Dot15d4(fcf_frametype = 2),
+    'MAC_ACK':                          lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 2),
 
     # ****************************************** APS *****************************************
 
-    'APS_TRANSPORT_NWK_KEY':            lambda self: Dot15d4(fcf_frametype = 1)
+    'APS_TRANSPORT_NWK_KEY':            lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 1)
                                                     / Dot15d4Data() / ZigbeeNWK(frametype = 1)
                                                     / ZigbeeSecurityHeader()
                                                     / ZigbeeAppCommandPayload(cmd_identifier = 5),
-    'APS_ACK':                          lambda self: Dot15d4(
+    'APS_ACK':                          lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_ackreq=0,
                                                         fcf_panidcompress=1,
@@ -311,7 +302,7 @@ PACKET_TEMPLATES = {
                                                     ),
 
 
-    'APS_TRANSPORT_KEY':                  lambda self: Dot15d4(
+    'APS_TRANSPORT_KEY':                  lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -339,7 +330,7 @@ PACKET_TEMPLATES = {
                                                         key_type=0x01
                                                     ),
 
-    'APS_REQUEST_TCLK':                lambda self: Dot15d4(
+    'APS_REQUEST_TCLK':                lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -369,7 +360,7 @@ PACKET_TEMPLATES = {
                                                         key_type=0x04
                                                     ),
 
-    'APS_REQUEST_NWK_KEY':                lambda self: Dot15d4(
+    'APS_REQUEST_NWK_KEY':                lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -399,13 +390,13 @@ PACKET_TEMPLATES = {
                                                         key_type=0x01
                                                     ),
 
-    'APS_CONFIRM_KEY':                   lambda self: Dot15d4(fcf_frametype = 1)
+    'APS_CONFIRM_KEY':                   lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 1)
                                                     / Dot15d4Data()
                                                     / ZigbeeNWK(frametype = 1)
                                                     / ZigbeeSecurityHeader()
                                                     / ZigbeeAppCommandPayload(cmd_identifier = 15),
 
-    'APS_VERIFY_TCLK':                  lambda self: Dot15d4(
+    'APS_VERIFY_TCLK':                  lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -437,7 +428,7 @@ PACKET_TEMPLATES = {
                                                         key_hash=0
                                                     ),
 
-    'APS_VERIFY_GLOBAL_KEY':                  lambda self: Dot15d4(
+    'APS_VERIFY_GLOBAL_KEY':                  lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -471,7 +462,7 @@ PACKET_TEMPLATES = {
 
     # ******************************************* NWK *****************************************
 
-    'NWK_ROUTE_REPLY':                  lambda self: Dot15d4(
+    'NWK_ROUTE_REPLY':                  lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -499,7 +490,7 @@ PACKET_TEMPLATES = {
                                                     ),
 
 
-    'NWK_REJOIN_REQUEST_TC':               lambda self: Dot15d4(
+    'NWK_REJOIN_REQUEST_TC':               lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=0,
@@ -531,7 +522,7 @@ PACKET_TEMPLATES = {
                                                         allocate_address=1
                                                     ),
 
-    'NWK_REJOIN_REQUEST_SECURE':               lambda self: Dot15d4(
+    'NWK_REJOIN_REQUEST_SECURE':               lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -564,7 +555,7 @@ PACKET_TEMPLATES = {
                                                     ),
 
     # ************************************ ZDO *****************************************
-    'ZDO_NODE_DESCRIPTOR_REQUEST_UNENCRYPTED':  lambda self: Dot15d4(
+    'ZDO_NODE_DESCRIPTOR_REQUEST_UNENCRYPTED':  lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -596,7 +587,7 @@ PACKET_TEMPLATES = {
                                                     )/ Raw(bytes([self.sequence_numbers["zdo_tsn"] & 0xFF]) + self.config["coord_addr"].to_bytes(2, "little")),
 
 
-    'ZDO_NODE_DESCRIPTOR_RESPONSE':      lambda self: Dot15d4(
+    'ZDO_NODE_DESCRIPTOR_RESPONSE':      lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -625,7 +616,7 @@ PACKET_TEMPLATES = {
                                                         dst_endpoint=0
                                                     )/ Raw(build_zdo_node_descriptor_payload(self)),
 
-    'ZDO_EXTENDED_ADDRESS_RESPONSE':      lambda self: Dot15d4(
+    'ZDO_EXTENDED_ADDRESS_RESPONSE':      lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -655,7 +646,7 @@ PACKET_TEMPLATES = {
                                                     )/ Raw(build_zdo_extended_address_payload(self)),
 
 
-    'ZDO_NODE_DESCRIPTOR_REQUEST':      lambda self: Dot15d4(
+    'ZDO_NODE_DESCRIPTOR_REQUEST':      lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -684,7 +675,7 @@ PACKET_TEMPLATES = {
                                                         dst_endpoint=0
                                                     )/ Raw(bytes([self.sequence_numbers["zdo_tsn"] & 0xFF]) + self.config["coord_addr"].to_bytes(2, "little")),
 
-    'ZDO_SIMPLE_DESCRIPTOR_RESPONSE':      lambda self: Dot15d4(
+    'ZDO_SIMPLE_DESCRIPTOR_RESPONSE':      lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -713,7 +704,7 @@ PACKET_TEMPLATES = {
                                                         dst_endpoint=0
                                                     )/ Raw(build_zdo_simple_descriptor_response(self)),
 
-    'ZDO_SIMPLE_DESCRIPTOR_REQUEST':      lambda self: Dot15d4(
+    'ZDO_SIMPLE_DESCRIPTOR_REQUEST':      lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -743,7 +734,7 @@ PACKET_TEMPLATES = {
                                                     )/ Raw(bytes([self.sequence_numbers["zdo_tsn"] & 0xFF]) + self.config["coord_addr"].to_bytes(2, "little")),
 
 
-    'ZDO_MGMT_LQI_REQ':                       lambda self: Dot15d4(
+    'ZDO_MGMT_LQI_REQ':                       lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -772,7 +763,7 @@ PACKET_TEMPLATES = {
                                                         dst_endpoint=0
                                                     )/ Raw(bytes([self.sequence_numbers["zdo_tsn"] & 0xFF]) + self.config["coord_addr"].to_bytes(2, "little")),
 
-    'ZDO_DEVICE_ANNOUNCE':              lambda self: Dot15d4(
+    'ZDO_DEVICE_ANNOUNCE':              lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 1,
                                                         fcf_security=0,
                                                         fcf_ackreq=0,
@@ -804,7 +795,7 @@ PACKET_TEMPLATES = {
                                                             + self.config["ieee_address"].to_bytes(8, "little")
                                                             + bytes([0x6C & 0xFF])),
 
-    'ZDO_ACTIVE_ENDPOINT_RESPONSE':             lambda self: Dot15d4(
+    'ZDO_ACTIVE_ENDPOINT_RESPONSE':             lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -834,7 +825,7 @@ PACKET_TEMPLATES = {
                                                     )/ Raw(build_zdo_active_endpoint_response(self)),
 
     # ******************************************* ZCL *****************************************
-    'ZCL_READ_ATTRIBUTES':              lambda self: Dot15d4(
+    'ZCL_READ_ATTRIBUTES':              lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 0,
                                                         fcf_security=0,
                                                         fcf_ackreq=0,
@@ -859,7 +850,7 @@ PACKET_TEMPLATES = {
                                                         dst_endpoint=0
                                                     ),
 
-    'ZCL_READ_ATTRIBUTES_RESPONSE':              lambda self: Dot15d4(
+    'ZCL_READ_ATTRIBUTES_RESPONSE':              lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype=1,
                                                         fcf_security=0,
                                                         fcf_ackreq=1,
@@ -894,7 +885,7 @@ PACKET_TEMPLATES = {
                                                 ),
 
 
-    'ZCL_DISCOVER_ATTRIBUTES':          lambda self: Dot15d4(
+    'ZCL_DISCOVER_ATTRIBUTES':          lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 0,
                                                         fcf_security=0,
                                                         fcf_ackreq=0,

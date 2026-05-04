@@ -10,10 +10,17 @@ zoh_restart_cmd :
 
 # For hardware driver:
 hardware_mac : 0x00124b003a053efe
+hardware_port : "/dev/ttyACM0"
 baud_rate : 115200
 channel : 20
 hardware_timeout : 17
 hardware_restart_cmd : 
   - /bin/bash
   - /home/eliza/Coding/Thesis/zigbee-fuzzer/scripts/restartSonoffCoord.sh
+
+# For zboss driver:
+zboss_wpipe : "/tmp/zt1.read"
+zboss_rpipe : "/tmp/zt1.write"
+zboss_timeout : 5
+zboss_mac : 0x6c63696c63696c63
 

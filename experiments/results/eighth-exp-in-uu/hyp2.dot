@@ -1,0 +1,34 @@
+digraph g {
+
+	s0 [shape="circle" label="s0"];
+	s1 [shape="circle" label="s1"];
+	s2 [shape="circle" label="s2"];
+	s0 -> s0 [label="MAC_BEACON_REQUEST / MAC_BEACON"];
+	s0 -> s1 [label="MAC_ASSOCIATION_REQUEST / APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s0 -> s0 [label="NWK_REJOIN_REQUEST_TC / EMPTYRESPONSE"];
+	s0 -> s0 [label="NWK_REJOIN_REQUEST_SECURE / EMPTYRESPONSE"];
+	s0 -> s0 [label="APS_REQUEST_TCLK / EMPTYRESPONSE"];
+	s0 -> s1 [label="APS_REQUEST_NWK_KEY / APS_CMD_TRANSPORT_NWK_KEY"];
+	s0 -> s0 [label="APS_VERIFY_TCLK / EMPTYRESPONSE"];
+	s0 -> s0 [label="APS_VERIFY_GLOBAL_KEY / EMPTYRESPONSE"];
+	s1 -> s1 [label="MAC_BEACON_REQUEST / MAC_BEACON"];
+	s1 -> s1 [label="MAC_ASSOCIATION_REQUEST / APS_CMD_TRANSPORT_NWK_KEY+MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s1 -> s1 [label="NWK_REJOIN_REQUEST_TC / NWK_REJOIN_RESPONSE_FAILURE(status=2)"];
+	s1 -> s1 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS"];
+	s1 -> s1 [label="APS_REQUEST_TCLK / APS_CMD_TRANSPORT_TC_LINK_KEY"];
+	s1 -> s1 [label="APS_REQUEST_NWK_KEY / APS_CMD_TRANSPORT_NWK_KEY"];
+	s1 -> s1 [label="APS_VERIFY_TCLK / APS_ACK"];
+	s1 -> s2 [label="APS_VERIFY_GLOBAL_KEY / APS_CONFIRM_KEY(status=0)"];
+	s2 -> s2 [label="MAC_BEACON_REQUEST / MAC_BEACON"];
+	s2 -> s2 [label="MAC_ASSOCIATION_REQUEST / MAC_ASSOCIATION_RESPONSE(status=0)"];
+	s2 -> s2 [label="NWK_REJOIN_REQUEST_TC / NWK_REJOIN_RESPONSE_SUCCESS"];
+	s2 -> s2 [label="NWK_REJOIN_REQUEST_SECURE / NWK_REJOIN_RESPONSE_SUCCESS"];
+	s2 -> s2 [label="APS_REQUEST_TCLK / APS_CMD_TRANSPORT_TC_LINK_KEY"];
+	s2 -> s2 [label="APS_REQUEST_NWK_KEY / APS_CMD_TRANSPORT_NWK_KEY"];
+	s2 -> s2 [label="APS_VERIFY_TCLK / APS_ACK"];
+	s2 -> s2 [label="APS_VERIFY_GLOBAL_KEY / APS_CONFIRM_KEY(status=0)"];
+
+__start0 [label="" shape="none" width="0" height="0"];
+__start0 -> s0;
+
+}

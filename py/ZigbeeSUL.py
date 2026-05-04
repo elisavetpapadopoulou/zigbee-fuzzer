@@ -2,6 +2,7 @@ from pathlib import Path
 import traceback
 import yaml
 
+from normalize_test import *
 from ZigbeeDriver import *
 from ZigbeePackets import *
 from ZigbeeEncryption import *
@@ -15,8 +16,9 @@ class ZigbeeSUL:
         with open(CONFIG_PATH, "r") as f:
             general_config = yaml.safe_load(f)
 
-        self.general_config = general_config
-        self.driver = driver_factory(general_config, serial_port=serial_port)
+        self.general_config = config_factory(general_config, serial_port)
+        self.driver = self.general_config["driver"]
+        self.dot15d4_layer = self.general_config["dot15d4_layer"]
         self.packets = PACKET_TEMPLATES
         self.seq = 0
         self.config = {
@@ -24,7 +26,8 @@ class ZigbeeSUL:
             "coord_addr": 0xFFFF,
             "coord_ieee": 0x0000000000000000,
             "short_address": 0xFFFE,
-            "ieee_address": 0x79bc000000010003,
+            "ieee_address": 0x79bc000000010001,
+            "preconf_link_key": b"",
             "tc_global_key": bytes([90,105,103,66,101,101,65,108,108,105,97,110,99,101,48,57]),
             "tc_link_key": b"",
             "network_key": {}
@@ -39,15 +42,21 @@ class ZigbeeSUL:
         }
         self.input_sequence = []
         self.output_sequence = []
-        self.noise = ["NWK_DISCOVER_ROUTE_REQUEST", "NWK_LINK_STATUS"]
+        self.noise = ["NWK_DISCOVER_ROUTE_REQUEST", "NWK_LINK_STATUS", "MAC_ACK"]
         self.primed = False
+        self.associated = False
         self.network_secured = False
 
     def pre(self, timeout_s=9.0):
         try:
             driver_pre(self, timeout_s=timeout_s)
             self.reset()
+
+            while self.driver.receive_raw(timeout=0.05):
+                pass
+            self._session_start = time.time()
             self.primed = True
+
         except Exception as e:
             print(traceback.format_exc())
             raise e
@@ -56,7 +65,6 @@ class ZigbeeSUL:
         try:
             if self.primed is True:
                 log.state(f"STEP [{input_symbol}]")
-                print(hex(self.config["coord_ieee"]))
                 output_symbol = self.step_internal(input_symbol)
                 # TODO: Will probably need some filtering (+ etc, basically when there's 
                 # a combination of outputs)
@@ -66,11 +74,15 @@ class ZigbeeSUL:
             raise e
 
     def post(self):
-        pass
+        if isinstance(self.driver, WpanSerialDriver):
+            self.input_sequence, self.output_sequence = normalize_beacons(self.input_sequence, self.output_sequence)
+            print("Final output sequence:")
+            for inp, out in zip(self.input_sequence, self.output_sequence):
+                print(f"{inp} -> {out}")
 
     def increment_counters(self, pkt):
         # Increment the correct counters AFTER crafting the packet
-        if pkt.haslayer(Dot15d4):
+        if pkt.haslayer(self.dot15d4_layer):
             self.sequence_numbers["mac_seq"] =  (self.sequence_numbers["mac_seq"] + 1) & 0xFF
         if pkt.haslayer(ZigbeeNWK):
             self.sequence_numbers["nwk_seq"] = (self.sequence_numbers["nwk_seq"] + 1) & 0xFF
@@ -86,6 +98,10 @@ class ZigbeeSUL:
         if not pkt:
             return "TIMEOUT"
 
+        # TODO: maybe this will be the key if the assoc_permit deletion doesn't work. 
+        # if time.time() - self._session_start > 240:
+        #     self.reset()
+
         # Just bypassing some specific frames
         if hasattr(self, input_symbol.lower()):
             output_symbol = getattr(self, input_symbol.lower())(pkt)
@@ -98,22 +114,31 @@ class ZigbeeSUL:
                 pkt, input_symbol = pre_handler(pkt, input_symbol)
 
             self.send(pkt, input_symbol)
-            output_pkts = self.receive(pkt)
+            output_pkts = self.receive(pkt, self.general_config.get("receive_timeout", 5.0))
 
-            # TODO: Let's see if we're gonna use this one in the end
-            if hasattr(self, input_symbol.lower() + '_post'):
-                output_pkts = getattr(self, input_symbol.lower() + '_post')(input_symbol, pkt, output_pkts)
 
             output_symbol = self.format_output(output_pkts)
 
+            # TODO: Let's see if we're gonna use this one in the end
+            if hasattr(self, input_symbol.lower() + '_post'):
+                output_symbol = getattr(self, input_symbol.lower() + '_post')(pkt, output_symbol)
+
             # Poll for response if the input pkt is supposed to be polled to return a response
-            # if output_symbol == "EMPTYRESPONSE":
+            # if output_symbol == "EMPTYRESPONSE" or "MAC_ACK":
+            # if self.general_config["driver_type"] != "hardware":
             #     if input_symbol.startswith("MAC_ASSOCIATION_REQUEST"):
             #         poll = self.packets["MAC_DATA_REQUEST"](self)
             #         self.increment_counters(poll)
             #         self.send(poll, "MAC_DATA_REQUEST")
             #         output_pkts = self.receive(poll)
             #         output_symbol = self.format_output(output_pkts)
+            #
+            # if self.general_config["driver_type"] == "hardware":
+                # if input_symbol.startswith("MAC_BEACON_REQUEST"):
+                #     if output_symbol == "EMPTYRESPONSE" and not self.associated:
+                #         output_symbol = "MAC_BEACON"
+                # if output_symbol == "MAC_BEACON+APS_CMD_TRANSPORT_NWK_KEY":
+                #     output_symbol = "APS_CMD_TRANSPORT_NWK_KEY"
 
         self.input_sequence.append(input_symbol)
         self.output_sequence.append(output_symbol)
@@ -129,7 +154,7 @@ class ZigbeeSUL:
         self.driver.inject_air_frame_with_meta(bytes(pkt))
 
 
-    def receive(self, pkt, max_pkts=1, timeout=16):
+    def receive(self, pkt, timeout=5.0):
         packets = []
         time_start = time.time()
         time_now = time_start
@@ -138,7 +163,7 @@ class ZigbeeSUL:
             data = self.driver.receive_raw()
             if data is not None:
                 try:
-                    pkt = Dot15d4(bytes(data))
+                    pkt = self.dot15d4_layer(bytes(data))
                     log.rx(pkt.summary())
                     if pkt.haslayer(ZigbeeSecurityHeader):
                         decrypted = decrypt_all(self, pkt)
@@ -146,6 +171,15 @@ class ZigbeeSUL:
                     if pkt is not None:
                         packets.append(pkt)
                         assert(isinstance(pkt, Packet))
+
+                        # Here we need to make an exception and handle the transport key command before receiving more packets, 
+                        # because it can contain the network key that we need to decrypt the following packets.
+                        if ZigbeeAppCommandPayload in pkt:
+                            aps = pkt[ZigbeeAppCommandPayload]
+                            aps_cmd = int(getattr(aps, "cmd_identifier", 0))
+                            if aps_cmd == 0x05:
+                                _ = self._h_aps_cmd_transport_key(pkt, "APS_CMD_TRANSPORT_KEY")
+
                 except Exception as e:
                     log.log_error(f"Exception: {e}")
             else:
@@ -175,6 +209,9 @@ class ZigbeeSUL:
             summary = output_pkt.summary().replace(' / ', '>')
             # log.rx(summary)
             sym = self._handlers(output_pkt)
+            if sym == "":
+                new_pkt = Dot15d4(bytes(output_pkt))
+                sym = self._handlers(new_pkt)
             if sym not in self.noise:
                 entries.add(sym)
 
@@ -203,6 +240,7 @@ class ZigbeeSUL:
         self.sequence_numbers = {k: 1 for k in self.sequence_numbers}
         self.sequence_numbers["sec_nwk_fc"] = 0x01000000
         self.sequence_numbers["sec_aps_fc"] = 0x01000000
+        self.associated = False
         self.network_secured = False
         time.sleep(wait)
 
@@ -304,7 +342,7 @@ class ZigbeeSUL:
         self.config["pan_id"] = getattr(pkt, "src_panid", -1)
         self.config["coord_addr"] = getattr(pkt, "src_addr", -1)
         association_permit = getattr(pkt, "sf_assocpermit", None)
-        return sym+f"(assoc_permit={association_permit})"
+        return sym
 
     def _h_mac_association_response(self, pkt, sym):
         if self.config["pan_id"] == 0xFFFF:
@@ -315,6 +353,7 @@ class ZigbeeSUL:
             self.config["short_address"] = getattr(pkt, "short_address", -1)
             if isinstance(self.driver, WpanSerialDriver):
                 self.driver.set_addresses(self.config["pan_id"], self.config["short_address"])
+            self.associated = True
         return sym+f"(status={status})"
 
     def _h_aps_ack(self, pkt, sym):
@@ -340,6 +379,7 @@ class ZigbeeSUL:
                 self.network_secured = True
                 log.state("network_secured = True")
                 self.config["network_key"][aps_cmd.key_seqnum] = key_bytes
+                self.associated = True
         elif key_type == 0x04:
             sym = "APS_CMD_TRANSPORT_TC_LINK_KEY"
             key_bytes = bytes(getattr(aps_cmd, "key", b""))
@@ -430,18 +470,6 @@ class ZigbeeSUL:
 
     def mac_data_request_pre(self, pkt, input_symbol):
         return pkt, input_symbol
-
-    """
-    def mac_data_request_post(self, input_symbol, pkt, output_pkts):
-        pkt = Dot15d4(bytes(pkt))
-        output_symbol = self.format_output(output_pkts)
-        if output_symbol == "EMPTYRESPONSE":
-            time.sleep(2)
-           pkt[Dot15d4].seqnum += 1
-            self.send(pkt)
-            output_pkts = self.receive(pkt)
-        return output_pkts
-    """
 
     def mac_gts_request_pre(self, pkt, input_symbol):
         pkt[Dot15d4CmdGTSReq].gts_len = 1
@@ -567,9 +595,36 @@ class ZigbeeSUL:
         return pkt, input_symbol
 
 
+    """
+        Post-processing functions for outgoing frames
+    """
+    def mac_association_request_post(self, output_symbol):
+        if self.general_config["driver_type"] != "hardware":
+            poll = self.packets["MAC_DATA_REQUEST"](self)
+            self.increment_counters(poll)
+            self.send(poll, "MAC_DATA_REQUEST")
+            output_pkts = self.receive(poll)
+            output_symbol = self.format_output(output_pkts)
+        elif self.general_config["driver_type"] == "hardware":
+            if output_symbol == "MAC_BEACON+APS_CMD_TRANSPORT_NWK_KEY":
+                output_symbol = "APS_CMD_TRANSPORT_NWK_KEY"
+        return output_symbol
 
+    def mac_beacon_request_post(self, output_symbol):
+        if self.general_config["driver_type"] == "hardware":
+            if output_symbol == "EMPTYRESPONSE" and not self.associated:
+                output_symbol = "MAC_BEACON"
+        return output_symbol
 
-
-
-
+    """
+    def mac_data_request_post(self, input_symbol, pkt, output_pkts):
+        pkt = Dot15d4(bytes(pkt))
+        output_symbol = self.format_output(output_pkts)
+        if output_symbol == "EMPTYRESPONSE":
+            time.sleep(2)
+           pkt[Dot15d4].seqnum += 1
+            self.send(pkt)
+            output_pkts = self.receive(pkt)
+        return output_pkts
+    """
 

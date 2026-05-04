@@ -1,0 +1,8 @@
+java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar \
+@experiments/args/hw_args -test experiments/tests/simple_hw_test.txt \
+-probeCmd responseWait,MAC_BEACON_REQUEST,MAC_ASSOCIATION_REQUEST,ZDO_NODE_DESCRIPTOR_REQUEST \
+-times 7 \
+-probeLow 0 \
+-probeHigh 20000 \
+-probeTol 25 \
+-probeExport timing_alphabet.txt
