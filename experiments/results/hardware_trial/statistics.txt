@@ -1,0 +1,76 @@
+=== RUN DESCRIPTION ===
+Alphabet: [MAC_BEACON_REQUEST, MAC_ASSOCIATION_REQUEST, MAC_DISASSOCIATION_NOTIFY, NWK_REJOIN_REQUEST_TC, NWK_REJOIN_REQUEST_SECURE, APS_REQUEST_TCLK, APS_REQUEST_NWK_KEY, APS_VERIFY_TCLK, APS_VERIFY_GLOBAL_KEY, ZDO_NODE_DESCRIPTOR_REQUEST, ZDO_DEVICE_ANNOUNCE]
+
+StateFuzzerConfig Parameters
+Help: false
+Debug: false
+Quiet: false
+Output Directory: experiments/results/hardware_trial
+Fuzzing Client: false
+
+LearnerConfig Parameters
+Alphabet: experiments/alphabets/association-nwkEntering.xml
+Learning Algorithm: TTT
+Equivalence Algorithms: [RANDOM_WP_METHOD]
+Max Depth: 1
+Min Length: 5
+Max Length: 15
+Max Equivalence Queries: 1000
+Runs Per Membership Query: 1
+Random Length: 5
+Membership Query Retries: 3
+Log Queries: true
+Prob Reset: 0.0
+Test File: null
+Seed: 0
+Cache Tests: false
+Ce Sanitization: true
+Skip Non Det Tests: false
+Ce Reruns: 3
+Probabilistic Sanitization: true
+Time Limit: null
+Test Limit: null
+Round Limit: null
+IOMode: true
+Probability of Choosing a New DataValue: 0.1
+Max Runs: 1
+Max Depth for Register Automata: 1
+Reset Runs: true
+Seed transitions: true
+Draw symbols uniformly: true
+
+SulServerConfigZigbee Parameters
+Zigbee Adapter: /dev/serial/by-id/usb-Zephyr_Project_CDC_ACM_serial_backend_349B993F48B0E861-if00
+Mapper: null
+Target addr: EB:D8:6B:33:90:0B
+
+MapperConfig Parameters
+Mapper Connection Config: null
+Repeating Outputs: null
+Socket Closed as Timeout: false
+Disabled as Timeout: false
+Merge Repeating: false
+
+SulAdapterConfig Parameters
+Adapter Port: null
+Adapter Address: localhost
+
+=== STATISTICS ===
+Learning finished: true
+Size of the input alphabet: 11
+Number of states: 1
+Number of hypotheses: 1
+Number of inputs: 198
+Number of tests: 23
+Number of learning inputs: 11
+Number of learning tests: 11
+Number of inputs up to last hypothesis: 11
+Number of tests up to last hypothesis: 11
+Time (ms) to learn model: 7129455
+Counterexamples:
+Number of inputs when hypothesis was generated: [11]
+Number of tests when hypothesis was generated: [11]
+Time (ms) when hypothesis was generated: [1053786]
+Number of inputs when counterexample was found: []
+Number of tests when counterexample was found: []
+Time (ms) when counterexample was found: []

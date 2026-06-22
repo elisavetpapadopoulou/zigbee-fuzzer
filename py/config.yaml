@@ -1,4 +1,4 @@
-driver_type : "hardware"
+driver_type : "zoh"
 # For ZOH driver:
 zoh_host : "127.0.0.1"
 zoh_port : 6000
@@ -10,7 +10,7 @@ zoh_restart_cmd :
 
 # For hardware driver:
 hardware_mac : 0x00124b003a053efe
-hardware_port : "/dev/ttyACM0"
+hardware_port : "/dev/serial/by-id/usb-Zephyr_Project_CDC_ACM_serial_backend_349B993F48B0E861-if00"
 baud_rate : 115200
 channel : 20
 hardware_timeout : 17

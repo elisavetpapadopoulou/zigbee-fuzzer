@@ -68,6 +68,8 @@ class ZigbeeSUL:
                 output_symbol = self.step_internal(input_symbol)
                 # TODO: Will probably need some filtering (+ etc, basically when there's 
                 # a combination of outputs)
+                self.input_sequence.append(input_symbol)
+                self.output_sequence.append(output_symbol)
                 return output_symbol
         except Exception as e:
             print(traceback.format_exc())
@@ -117,31 +119,11 @@ class ZigbeeSUL:
             output_pkts = self.receive(pkt, self.general_config.get("receive_timeout", 5.0))
 
 
-            output_symbol = self.format_output(output_pkts)
+            output_symbol = self.format_output(input_symbol, output_pkts)
 
             # TODO: Let's see if we're gonna use this one in the end
             if hasattr(self, input_symbol.lower() + '_post'):
-                output_symbol = getattr(self, input_symbol.lower() + '_post')(pkt, output_symbol)
-
-            # Poll for response if the input pkt is supposed to be polled to return a response
-            # if output_symbol == "EMPTYRESPONSE" or "MAC_ACK":
-            # if self.general_config["driver_type"] != "hardware":
-            #     if input_symbol.startswith("MAC_ASSOCIATION_REQUEST"):
-            #         poll = self.packets["MAC_DATA_REQUEST"](self)
-            #         self.increment_counters(poll)
-            #         self.send(poll, "MAC_DATA_REQUEST")
-            #         output_pkts = self.receive(poll)
-            #         output_symbol = self.format_output(output_pkts)
-            #
-            # if self.general_config["driver_type"] == "hardware":
-                # if input_symbol.startswith("MAC_BEACON_REQUEST"):
-                #     if output_symbol == "EMPTYRESPONSE" and not self.associated:
-                #         output_symbol = "MAC_BEACON"
-                # if output_symbol == "MAC_BEACON+APS_CMD_TRANSPORT_NWK_KEY":
-                #     output_symbol = "APS_CMD_TRANSPORT_NWK_KEY"
-
-        self.input_sequence.append(input_symbol)
-        self.output_sequence.append(output_symbol)
+                output_symbol = getattr(self, input_symbol.lower() + '_post')(output_symbol)
 
         # here there's a function that checks for suspicious behavior 
         # if it finds it, it retries
@@ -198,7 +180,7 @@ class ZigbeeSUL:
         return packets
 
 
-    def format_output(self, output_pkts):
+    def format_output(self, input_symbol, output_pkts):
 
         if not output_pkts:
             return 'EMPTYRESPONSE'
@@ -212,19 +194,28 @@ class ZigbeeSUL:
             if sym == "":
                 new_pkt = Dot15d4(bytes(output_pkt))
                 sym = self._handlers(new_pkt)
-            if sym not in self.noise:
-                entries.add(sym)
+            if not sym or sym == "EMPTYRESPONSE":
+                continue
+
+            for part in sym.split("+"):
+                if not part or part == "EMPTYRESPONSE":
+                    continue
+
+                if part in self.noise:
+                    continue
+
+                if part == "ZDO_NODE_DESCRIPTOR_RESPONSE":
+                    if input_symbol == "ZDO_NODE_DESCRIPTOR_REQUEST":
+                        entries.add(part)
+                else:
+                    entries.add(part)
 
         if not entries:
             return 'EMPTYRESPONSE'
         print(f"Output symbols: {entries}")
 
-        if len(entries) > 1:
-            output = "+".join(sorted(entries))
-        else:
-            output = entries.pop()
-        log.output(output)
-        return output
+        return "+".join(sorted(entries))
+
 
     def reset(self, wait: float = 0.2):
         self.input_sequence = []
@@ -329,6 +320,7 @@ class ZigbeeSUL:
         ident = sym.lower()
         handler_name = f"_h_{ident}"
         handler = getattr(self, handler_name, None)
+        log.output(sym)
         # print(f"Handler name: {handler_name}")
         if callable(handler):
             return handler(pkt, sym)
@@ -354,7 +346,7 @@ class ZigbeeSUL:
             if isinstance(self.driver, WpanSerialDriver):
                 self.driver.set_addresses(self.config["pan_id"], self.config["short_address"])
             self.associated = True
-        return sym+f"(status={status})"
+        return sym
 
     def _h_aps_ack(self, pkt, sym):
         return sym
@@ -432,6 +424,8 @@ class ZigbeeSUL:
         if zdo_tsn is not None:
             # print(f"Updating ZDO TSN to {zdo_tsn}")
             self.sequence_numbers["zdo_tsn"] = int(zdo_tsn)
+
+        sym = self.step_internal("ZDO_NODE_DESCRIPTOR_RESPONSE")
         return sym
 
     def _h_zdo_simple_descriptor_request(self, pkt, sym):
@@ -439,12 +433,14 @@ class ZigbeeSUL:
         if zdo_tsn is not None:
             # print(f"Updating ZDO TSN to {zdo_tsn}")
             self.sequence_numbers["zdo_tsn"] = int(zdo_tsn)
+        sym = self.step_internal("ZDO_SIMPLE_DESCRIPTOR_RESPONSE")
         return sym
 
     def _h_zdo_extended_address_request(self, pkt, sym):
         zdo_tsn = getattr(pkt, "trans_seqnum", None)
         if zdo_tsn is not None:
             self.sequence_numbers["zdo_tsn"] = int(zdo_tsn)
+        sym = self.step_internal("ZDO_EXTENDED_ADDRESS_RESPONSE")
         return sym
 
     def _h_zdo_active_endpoint_request(self, pkt, sym):
@@ -452,9 +448,13 @@ class ZigbeeSUL:
         if zdo_tsn is not None:
             # print(f"Updating ZDO TSN to {zdo_tsn}")
             self.sequence_numbers["zdo_tsn"] = int(zdo_tsn)
+        sym = self.step_internal("ZDO_ACTIVE_ENDPOINT_RESPONSE")
         return sym
 
     def _h_zcl_read_attributes_request(self, pkt, sym):
+        sym = self.step_internal("ZCL_READ_ATTRIBUTES_RESPONSE")
+        if sym == "EMPTYRESPONSE":
+            sym = "ZDO_INTERVIEW_SUCCESS"
         return sym
 
 
@@ -604,10 +604,11 @@ class ZigbeeSUL:
             self.increment_counters(poll)
             self.send(poll, "MAC_DATA_REQUEST")
             output_pkts = self.receive(poll)
-            output_symbol = self.format_output(output_pkts)
+            output_symbol = self.format_output("MAC_ASSOCIATION_REQUEST", output_pkts)
         elif self.general_config["driver_type"] == "hardware":
-            if output_symbol == "MAC_BEACON+APS_CMD_TRANSPORT_NWK_KEY":
-                output_symbol = "APS_CMD_TRANSPORT_NWK_KEY"
+            parts = output_symbol.split("+")
+            parts = [p for p in parts if p != "MAC_BEACON"]
+            output_symbol = "+".join(parts) if parts else "EMPTYRESPONSE"
         return output_symbol
 
     def mac_beacon_request_post(self, output_symbol):

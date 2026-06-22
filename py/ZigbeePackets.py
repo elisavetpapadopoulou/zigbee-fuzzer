@@ -148,6 +148,7 @@ def build_zcl_read_attributes_payload(self):
 
 
 PACKET_TEMPLATES = {
+    # ****************************************** MAC *****************************************
     'MAC_BEACON':                       lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 0)
                                                     / Dot15d4Beacon(),
 
@@ -272,6 +273,36 @@ PACKET_TEMPLATES = {
     'MAC_ACK':                          lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 2),
 
     # ****************************************** APS *****************************************
+
+    'APS_DATA_UNICAST':                   lambda self: self.general_config["dot15d4_layer"](
+                                                        fcf_frametype = 1,
+                                                        fcf_security=0,
+                                                        fcf_ackreq=1,
+                                                        fcf_panidcompress=1,
+                                                        fcf_destaddrmode=2,
+                                                        fcf_srcaddrmode=2,
+                                                        seqnum=self.sequence_numbers["mac_seq"] & 0xFF
+                                                    )/ Dot15d4Data(
+                                                        dest_panid=self.config["pan_id"],
+                                                        dest_addr=self.config["coord_addr"],
+                                                        src_addr=self.config["short_address"]
+                                                    )/ ZigbeeNWK(
+                                                        frametype = 0,
+                                                        destination=self.config["coord_addr"],
+                                                        source=self.config["short_address"],
+                                                        radius=30,
+                                                        seqnum=self.sequence_numbers["nwk_seq"] & 0xFF
+                                                    )/ ZigbeeAppDataPayload(
+                                                        aps_frametype=0,
+                                                        delivery_mode=0,
+                                                        frame_control=['security', 'ack_req'],
+                                                        counter=self.sequence_numbers["aps_seq"] & 0xFF,
+                                                        profile=0x0104,
+                                                        cluster=0x0000,
+                                                        src_endpoint=1,
+                                                        dst_endpoint=1
+                                                    )/ Raw(b"\x01\x02\x03"
+                                                    ),
 
     'APS_TRANSPORT_NWK_KEY':            lambda self: self.general_config["dot15d4_layer"](fcf_frametype = 1)
                                                     / Dot15d4Data() / ZigbeeNWK(frametype = 1)
@@ -461,6 +492,31 @@ PACKET_TEMPLATES = {
                                                     ),
 
     # ******************************************* NWK *****************************************
+
+    'NWK_LEAVE_REQUEST':                lambda self: self.general_config["dot15d4_layer"](
+                                                        fcf_frametype = 1,
+                                                        fcf_security=0,
+                                                        fcf_ackreq=1,
+                                                        fcf_panidcompress=1,
+                                                        fcf_destaddrmode=2,
+                                                        fcf_srcaddrmode=2,
+                                                        seqnum=self.sequence_numbers["mac_seq"] & 0xFF
+                                                    )/ Dot15d4Data(
+                                                        dest_panid=self.config["pan_id"],
+                                                        dest_addr=self.config["coord_addr"],
+                                                        src_addr=self.config["short_address"]
+                                                    )/ ZigbeeNWK(
+                                                        frametype = 1,
+                                                        destination=self.config["coord_addr"],
+                                                        source=self.config["short_address"],
+                                                        radius=1,
+                                                        seqnum=self.sequence_numbers["nwk_seq"] & 0xFF
+                                                    )/ ZigbeeNWKCommandPayload(
+                                                        cmd_identifier="leave",
+                                                        remove_children=0,
+                                                        rejoin=0,
+                                                        request=0
+                                                    ),
 
     'NWK_ROUTE_REPLY':                  lambda self: self.general_config["dot15d4_layer"](
                                                         fcf_frametype = 1,

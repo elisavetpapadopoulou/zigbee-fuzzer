@@ -1,21 +1,14 @@
 <alphabet>
     <InputZigbee name="MAC_BEACON_REQUEST"/>
     <InputZigbee name="MAC_ASSOCIATION_REQUEST"/>
-    <InputZigbee name="MAC_DATA_REQUEST"/>
     <InputZigbee name="MAC_DISASSOCIATION_NOTIFY"/>
     <InputZigbee name="NWK_REJOIN_REQUEST_TC"/>
-    <InputZigbee name="NWK_ROUTE_REPLY"/>
     <InputZigbee name="NWK_REJOIN_REQUEST_SECURE"/>
     <InputZigbee name="APS_REQUEST_TCLK"/>
     <InputZigbee name="APS_REQUEST_NWK_KEY"/>
     <InputZigbee name="APS_VERIFY_TCLK"/>
     <InputZigbee name="APS_VERIFY_GLOBAL_KEY"/>
-    <InputZigbee name="ZDO_NODE_DESCRIPTOR_RESPONSE"/>
     <InputZigbee name="ZDO_NODE_DESCRIPTOR_REQUEST"/>
     <InputZigbee name="ZDO_DEVICE_ANNOUNCE"/>
-    <InputZigbee name="ZDO_EXTENDED_ADDRESS_RESPONSE"/>
-    <InputZigbee name="ZDO_ACTIVE_ENDPOINT_RESPONSE"/>
-    <InputZigbee name="ZDO_SIMPLE_DESCRIPTOR_RESPONSE"/>
-    <InputZigbee name="ZCL_READ_ATTRIBUTES_RESPONSE"/>
 </alphabet>
 

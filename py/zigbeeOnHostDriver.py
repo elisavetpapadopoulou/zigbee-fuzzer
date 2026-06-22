@@ -263,7 +263,7 @@ class zigbeeOnHostDriver:
 
         self.sock.sendall(frame)
 
-    def receive_raw(self):
+    def receive_raw(self, timeout=0):
         with self._q_lock:
             raw_with_meta = self._rx_queue.popleft() if self._rx_queue else None
             if raw_with_meta is None:
