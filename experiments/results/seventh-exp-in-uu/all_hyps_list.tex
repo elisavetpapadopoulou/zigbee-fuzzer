@@ -1,0 +1,533 @@
+\documentclass[10pt]{article}
+\usepackage[top=1cm,bottom=1cm,left=1.2cm,right=1.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{titlesec}
+\usepackage{parskip}
+\pagestyle{empty}
+
+\titleformat{\section}[block]{\normalfont\bfseries}{}{0pt}{}
+\titlespacing{\section}{0pt}{6pt}{2pt}
+
+% Tight tabular block for one list of input/output pairs
+\newcommand{\iolist}[1]{%
+  \ttfamily\small
+  \begin{tabular}{@{}l@{}}
+  #1
+  \end{tabular}%
+  \rmfamily
+}
+
+% Label before a block (not printed, just a comment in source)
+% Use \textit{} inline for section labels if needed
+
+\begin{document}
+
+% ====================================================
+%  HYPOTHESIS 1  --  1 state (s0), all self-loops
+% ====================================================
+\section*{Hyp 1}
+
+\noindent\textit{s0 (all self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REJOIN\_TC/EMPTY\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/EMPTY\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/EMPTY\\
+VER\_GKEY/EMPTY\\
+}
+
+\bigskip\hrule
+
+% ====================================================
+%  HYPOTHESIS 2  --  3 states: s0, s1, s2
+% ====================================================
+\section*{Hyp 2}
+
+\noindent\textit{s0 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/EMPTY\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/EMPTY\\
+VER\_TCLK/EMPTY\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REQ\_NWK/TRANSP\_NWK\\
+}
+
+\medskip
+\noindent\textit{s1 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+}
+
+\medskip
+\noindent\textit{s1 $\to$ s2:}\\[2pt]
+\iolist{%
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s2 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/ASSOC\_RESP(0)\\
+REJOIN\_TC/REJ\_OK\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\bigskip\hrule
+
+% ====================================================
+%  HYPOTHESIS 3  --  4 states: s0, s1, s2, s3
+% ====================================================
+\section*{Hyp 3}
+
+\noindent\textit{s0 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/EMPTY\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/EMPTY\\
+VER\_TCLK/EMPTY\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s3:}\\[2pt]
+\iolist{%
+REQ\_NWK/TRANSP\_NWK\\
+}
+
+\medskip
+\noindent\textit{s1 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+}
+
+\medskip
+\noindent\textit{s1 $\to$ s2:}\\[2pt]
+\iolist{%
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s2 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/ASSOC\_RESP(0)\\
+REJOIN\_TC/REJ\_OK\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s3 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s3 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\bigskip\hrule
+
+% ====================================================
+%  HYPOTHESIS 4  --  5 states: s0, s1, s2, s3, s4
+% ====================================================
+\section*{Hyp 4}
+
+\noindent\textit{s0 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/EMPTY\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/EMPTY\\
+VER\_TCLK/EMPTY\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s3:}\\[2pt]
+\iolist{%
+REQ\_NWK/TRANSP\_NWK\\
+}
+
+\medskip
+\noindent\textit{s1 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+}
+
+\medskip
+\noindent\textit{s1 $\to$ s2:}\\[2pt]
+\iolist{%
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s2 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/ASSOC\_RESP(0)\\
+REJOIN\_TC/REJ\_OK\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s2 $\to$ s4:}\\[2pt]
+\iolist{%
+REQ\_TCLK/TRANSP\_TCLK\\
+}
+
+\medskip
+\noindent\textit{s3 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s3 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\medskip
+\noindent\textit{s4 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/ASSOC\_RESP(0)\\
+REJOIN\_TC/REJ\_OK\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/CONF\_KEY(0)\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\bigskip\hrule
+
+% ====================================================
+%  HYPOTHESIS 5  --  6 states: s0, s1, s2, s3, s4, s5
+% ====================================================
+\section*{Hyp 5}
+
+\noindent\textit{s0 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/EMPTY\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/EMPTY\\
+VER\_TCLK/EMPTY\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s3:}\\[2pt]
+\iolist{%
+REQ\_NWK/TRANSP\_NWK\\
+}
+
+\medskip
+\noindent\textit{s1 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+}
+
+\medskip
+\noindent\textit{s1 $\to$ s2:}\\[2pt]
+\iolist{%
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s1 $\to$ s5:}\\[2pt]
+\iolist{%
+REQ\_TCLK/TRANSP\_TCLK\\
+}
+
+\medskip
+\noindent\textit{s2 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/ASSOC\_RESP(0)\\
+REJOIN\_TC/REJ\_OK\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s2 $\to$ s4:}\\[2pt]
+\iolist{%
+REQ\_TCLK/TRANSP\_TCLK\\
+}
+
+\medskip
+\noindent\textit{s3 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s3 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\medskip
+\noindent\textit{s4 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/ASSOC\_RESP(0)\\
+REJOIN\_TC/REJ\_OK\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/CONF\_KEY(0)\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s5 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+}
+
+\medskip
+\noindent\textit{s5 $\to$ s4:}\\[2pt]
+\iolist{%
+VER\_TCLK/CONF\_KEY(0)\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\bigskip\hrule
+
+% ====================================================
+%  HYPOTHESIS 6  --  7 states: s0..s6  (final model)
+% ====================================================
+\section*{Hyp 6}
+
+\noindent\textit{s0 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/EMPTY\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/EMPTY\\
+VER\_TCLK/EMPTY\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\medskip
+\noindent\textit{s0 $\to$ s3:}\\[2pt]
+\iolist{%
+REQ\_NWK/TRANSP\_NWK\\
+}
+
+\medskip
+\noindent\textit{s1 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+}
+
+\medskip
+\noindent\textit{s1 $\to$ s2:}\\[2pt]
+\iolist{%
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s1 $\to$ s5:}\\[2pt]
+\iolist{%
+REQ\_TCLK/TRANSP\_TCLK\\
+}
+
+\medskip
+\noindent\textit{s2 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/ASSOC\_RESP(0)\\
+REJOIN\_TC/REJ\_OK\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s2 $\to$ s4:}\\[2pt]
+\iolist{%
+REQ\_TCLK/TRANSP\_TCLK\\
+}
+
+\medskip
+\noindent\textit{s3 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/EMPTY\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/ACK\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s3 $\to$ s1:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\medskip
+\noindent\textit{s3 $\to$ s6:}\\[2pt]
+\iolist{%
+REQ\_TCLK/TRANSP\_TCLK\\
+}
+
+\medskip
+\noindent\textit{s4 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/ASSOC\_RESP(0)\\
+REJOIN\_TC/REJ\_OK\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/CONF\_KEY(0)\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s5 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/REJ\_OK\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+}
+
+\medskip
+\noindent\textit{s5 $\to$ s4:}\\[2pt]
+\iolist{%
+VER\_TCLK/CONF\_KEY(0)\\
+VER\_GKEY/CONF\_KEY(0)\\
+}
+
+\medskip
+\noindent\textit{s6 (self-loops):}\\[2pt]
+\iolist{%
+BEACON\_REQ/BEACON(ap=1)\\
+REJOIN\_TC/REJ\_FAIL(2)\\
+REJOIN\_SEC/EMPTY\\
+REQ\_TCLK/TRANSP\_TCLK\\
+REQ\_NWK/TRANSP\_NWK\\
+VER\_TCLK/EMPTY\\
+VER\_GKEY/EMPTY\\
+}
+
+\medskip
+\noindent\textit{s6 $\to$ s5:}\\[2pt]
+\iolist{%
+ASSOC\_REQ/TRANSP\_NWK+ASSOC\_RESP\\
+}
+
+\end{document}

@@ -1,8 +1,8 @@
-package com.github.protocolfuzzing.zigbeefuzzer.symbols;
+package io.github.protocolfuzzing.zigbeefuzzer.symbols;
 
-import com.github.protocolfuzzing.zigbeefuzzer.ExecutionContextZigbee;
-import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.abstractsymbols.AbstractInputXml;
-import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.abstractsymbols.OutputChecker;
+import io.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.abstractsymbols.AbstractInputXml;
+import io.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.abstractsymbols.OutputChecker;
+import io.github.protocolfuzzing.zigbeefuzzer.ExecutionContextZigbee;
 
 public class InputZigbee extends AbstractInputXml<OutputZigbee, Object, ExecutionContextZigbee> {
 
@@ -21,11 +21,12 @@ public class InputZigbee extends AbstractInputXml<OutputZigbee, Object, Executio
     public void postSendUpdate(ExecutionContextZigbee context) {}
 
     @Override
-    public void postReceiveUpdate(OutputZigbee output, OutputChecker<OutputZigbee> outputChecker, ExecutionContextZigbee context) {}
+    public void postReceiveUpdate(
+        OutputZigbee output, OutputChecker<OutputZigbee> outputChecker, ExecutionContextZigbee context
+    ) {}
 
     @Override
     public Object generateProtocolMessage(ExecutionContextZigbee context) {
         throw new UnsupportedOperationException("Unimplemented method 'generateProtocolMessage'");
     }
-    
 }

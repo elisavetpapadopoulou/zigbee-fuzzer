@@ -1,12 +1,13 @@
-package com.github.protocolfuzzing.zigbeefuzzer;
+package io.github.protocolfuzzing.zigbeefuzzer;
+
+import com.beust.jcommander.Parameter;
+import io.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SULConfig;
+import io.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SULServerConfig;
 
 import java.io.PrintWriter;
 
-import com.beust.jcommander.Parameter;
-import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulServerConfig;
+public class SulServerConfigZigbee implements SULServerConfig {
 
-public class SulServerConfigZigbee implements SulServerConfig {
-    
     @Parameter(names = "-port", description = "TCP port for the Zigbee driver server")
     protected Integer port = 6000;
 
@@ -21,7 +22,7 @@ public class SulServerConfigZigbee implements SulServerConfig {
     @Parameter(names = "-connect", required = true,
                description = "The Zigbee MAC address of the target device")
     protected String targetMacAddr = null;
-    
+
 
     public String getAdapterSerialPort() {
         return serialPort;
@@ -34,7 +35,7 @@ public class SulServerConfigZigbee implements SulServerConfig {
     public String getTargetMacAddr() {
         return targetMacAddr;
     }
-    
+
 
     @Override
     public String getHost() {
@@ -64,7 +65,7 @@ public class SulServerConfigZigbee implements SulServerConfig {
     }
 
     @Override
-    public SulServerConfigZigbee cloneWithThreadId(int threadId) {
+    public SULConfig cloneWithThreadId(int threadId) {
         SulServerConfigZigbee cloned = new SulServerConfigZigbee();
         cloned.serialPort = this.serialPort;
         cloned.mapper = this.mapper;

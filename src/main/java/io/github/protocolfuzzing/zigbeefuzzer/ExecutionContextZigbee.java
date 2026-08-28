@@ -1,8 +1,8 @@
-package com.github.protocolfuzzing.zigbeefuzzer;
+package io.github.protocolfuzzing.zigbeefuzzer;
 
-import com.github.protocolfuzzing.zigbeefuzzer.symbols.InputZigbee;
-import com.github.protocolfuzzing.zigbeefuzzer.symbols.OutputZigbee;
-import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.context.ExecutionContext;
+import io.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.context.ExecutionContext;
+import io.github.protocolfuzzing.zigbeefuzzer.symbols.InputZigbee;
+import io.github.protocolfuzzing.zigbeefuzzer.symbols.OutputZigbee;
 
 public class ExecutionContextZigbee implements ExecutionContext<InputZigbee, OutputZigbee, Object> {
     public ExecutionContextZigbee() {}

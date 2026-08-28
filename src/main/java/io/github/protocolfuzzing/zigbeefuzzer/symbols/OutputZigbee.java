@@ -1,8 +1,8 @@
-package com.github.protocolfuzzing.zigbeefuzzer.symbols;
+package io.github.protocolfuzzing.zigbeefuzzer.symbols;
+
+import io.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.abstractsymbols.AbstractOutput;
 
 import java.util.Collections;
-
-import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.abstractsymbols.AbstractOutput;
 
 public class OutputZigbee extends AbstractOutput<OutputZigbee, Object> {
     public OutputZigbee(String name) {
@@ -19,5 +19,4 @@ public class OutputZigbee extends AbstractOutput<OutputZigbee, Object> {
     protected OutputZigbee convertOutput() {
         return this;
     }
-
 }

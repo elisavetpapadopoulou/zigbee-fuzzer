@@ -1,6 +1,6 @@
-package com.github.protocolfuzzing.zigbeefuzzer.symbols;
+package io.github.protocolfuzzing.zigbeefuzzer.symbols;
 
-import com.github.protocolfuzzing.protocolstatefuzzer.components.learner.alphabet.xml.AlphabetPojoXml;
+import io.github.protocolfuzzing.protocolstatefuzzer.components.learner.alphabet.xml.AlphabetPojoXml;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
@@ -25,7 +25,9 @@ public class AlphabetPojoXmlZigbee extends AlphabetPojoXml<InputZigbee> {
     }
 
     public List<InputZigbee> getInputs() {
-        List<InputZigbee> allInputs = xmlInputs.stream().map(xmlInput -> new InputZigbee(xmlInput.name)).collect(Collectors.toList());
+        List<InputZigbee> allInputs = xmlInputs.stream()
+            .map(xmlInput -> new InputZigbee(xmlInput.name))
+            .collect(Collectors.toList());
         return allInputs;
     }
 
