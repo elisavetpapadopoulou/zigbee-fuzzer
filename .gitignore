@@ -1,6 +1,6 @@
 # Ignore all logs
 .logs/
-*.log
+# *.log
 
 # Ignore Java build artifacts
 target/
