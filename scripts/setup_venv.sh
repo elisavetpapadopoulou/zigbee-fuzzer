@@ -13,3 +13,10 @@ else
     source venv/bin/activate
     pip3 install -r requirements.txt
 fi
+
+if ! command -v mvn >/dev/null 2>&1; then
+    echo "Maven (mvn) is not on PATH. The Python venv does not provide it."
+    echo "Install a Java 21 JDK and Maven, then run: mvn package"
+elif ! command -v java >/dev/null 2>&1; then
+    echo "java is not on PATH. Install a Java 21 JDK before: mvn package"
+fi

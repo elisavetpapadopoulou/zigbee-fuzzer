@@ -18,11 +18,29 @@ This is a test setup to apply protocol state fuzzing to Zigbee coordinators and 
 
 ## Getting Started
 
-1. Set up and activate a python environment for zigbee-fuzzer: `source scripts/setup_venv.sh`
-2. Build zigbee-fuzzer: `mvn package`
-3. Edit `py/config.yaml` for the target (`driver_type`, addresses, serial device / TCP port, restart commands). The checked-in restart scripts assume a local Zigbee-on-Host or Sonoff helper tree; change the paths if yours differ.
-4. Start the stack or plug in the adapter (for `zoh`, Zigbee-on-Host must be listening on `zoh_host`:`zoh_port`).
-5. Start learning. Keep the venv activated so jep can find the interpreter.
+The Python venv only has the mapper (Scapy, jep, …). **Maven and the JDK are system tools**; `source scripts/setup_venv.sh` will not install `mvn`.
+
+1. Install a **Java 21** JDK, Maven, and graphviz (`dot`), then check that Maven is using Java 21:
+
+   ```sh
+   java -version
+   mvn -version
+   dot -V
+   ```
+
+   On Debian/Ubuntu:
+
+   ```sh
+   sudo apt install openjdk-21-jdk maven graphviz
+   ```
+
+   If `mvn` is missing after that, it is not on `PATH` (module system, or `JAVA_HOME` pointing at another JDK). Fix that before the next steps.
+
+2. Set up and activate a python environment for zigbee-fuzzer: `source scripts/setup_venv.sh`
+3. Build zigbee-fuzzer: `mvn package`
+4. Edit `py/config.yaml` for the target (`driver_type`, addresses, serial device / TCP port, restart commands). The checked-in restart scripts assume a local Zigbee-on-Host or Sonoff helper tree; change the paths if yours differ.
+5. Start the stack or plug in the adapter (for `zoh`, Zigbee-on-Host must be listening on `zoh_host`:`zoh_port`).
+6. Start learning. Keep the venv activated so jep can find the interpreter.
 
 Default config is Zigbee-on-Host:
 
