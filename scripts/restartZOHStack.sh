@@ -7,8 +7,10 @@ RED="\033[1;31m"
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$HOME/Coding/Thesis/suts/zigbee-on-host"
-LOG_DIR="$HOME/Coding/Thesis/zigbee-fuzzer/.logs"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT_DIR="${ZOH_ROOT:-$HOME/Coding/Thesis/suts/zigbee-on-host}"
+LOG_DIR="${ZOH_LOG_DIR:-$REPO_DIR/.logs}"
 LOG_FILE="$LOG_DIR/dev-cli.log"
 PID_FILE="$LOG_DIR/dev-cli.pid"
 CMD=(npm run dev:cli -- --form yes)

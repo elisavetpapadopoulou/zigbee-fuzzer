@@ -8,13 +8,15 @@ RED="\033[1;31m"
 set -euo pipefail
 
 set -e
-ROOT_DIR="$HOME/Coding/Thesis/hardware_setup"
-LOG_DIR="$HOME/Coding/Thesis/zigbee-fuzzer/.logs"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ROOT_DIR="${HARDWARE_SETUP:-$HOME/Coding/Thesis/hardware_setup}"
+LOG_DIR="${ZOH_LOG_DIR:-$REPO_DIR/.logs}"
 LOG_FILE="$LOG_DIR/dev-cli.log"
 PID_FILE="$LOG_DIR/dev-cli.pid"
 
 BACKUP_FILE="$ROOT_DIR/baseline_backup.json"
-PORT="/dev/ttyUSB0"
+PORT="${SONOFF_PORT:-/dev/ttyUSB0}"
 
 mkdir -p "$LOG_DIR"
 cd "$ROOT_DIR"
