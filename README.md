@@ -1,129 +1,74 @@
 # Zigbee-Fuzzer
 
-Protocol state fuzzer for Zigbee coordinators and stacks, built on [ProtocolState-Fuzzer](https://github.com/protocol-fuzzing/protocol-state-fuzzer) 0.2.0 (LearnLib `SUL` API).
+This is a test setup to apply protocol state fuzzing to Zigbee coordinators and stacks. It is built upon the [ProtocolState-Fuzzer](https://github.com/protocol-fuzzing/protocol-state-fuzzer) framework and can be used to either test a hardware IEEE 802.15.4 adapter over-the-air or to test a Zigbee-on-Host (or ZBOSS) stack in a Linux process.
 
-Java (`src/`) drives learning. A Python mapper (`py/ZigbeeSUL.py`) turns abstract symbols into IEEE 802.15.4 / Zigbee frames with Scapy. The two sides talk through [jep](https://github.com/ninia/jep). Which radio/stack you hit is **not** chosen on the Java command line: it is `driver_type` in `py/config.yaml`.
+**src/** contains code that configures ProtocolState-Fuzzer (PSF) and acts as a bridge between PSF and the mapper. This is done using [jep](https://github.com/ninia/jep), which allows embedding a CPython interpreter in a Java process.
 
-## What actually runs
+**py/** contains the mapper. `ZigbeeSUL` uses Scapy to construct and parse IEEE 802.15.4 / Zigbee packets. The radio or stack is selected in `py/config.yaml` (`driver_type`: `hardware`, `zoh`, or `zboss`).
 
-| Path | Used at runtime? |
-| --- | --- |
-| `src/main/java/...` | Yes — PSF entrypoint |
-| `py/ZigbeeSUL.py`, `ZigbeeDriver.py`, `ZigbeePackets.py`, `ZigbeeEncryption.py`, drivers, `config.yaml` | Yes — mapper |
-| `experiments/alphabets/association-nwkEntering.xml` | Yes — alphabet that matches `PACKET_TEMPLATES` |
-| `experiments/args/` | Yes — PSF argument files |
-| `scripts/setup_venv.sh` | Yes — Python env |
-| `scripts/restartZOHStack.sh`, `restartSonoffCoord.sh` | Yes, if `config.yaml` restart commands point at them |
-| `src/main/resources/default_alphabet.xml` | Only if you omit `-alphabet`. **Do not:** it still has `APS_REQUEST_KEY` / `APS_VERIFY_KEY`, which the mapper does not implement |
-| `experiments/alphabets/ZigbeeAssoc.xml`, `tclinkkeytest.xml` | Stale names (`APS_REQUEST_KEY`). Will crash |
-| `-mapper` / `py/ZigbeeSUL_<name>.py` | Java can load it; **no such files exist** |
-| `py/Zigbee/`, `py/zoh_files/`, `py/testing-scripts/` | Scratch copies, not imported by the live mapper |
-| `scripts/beautify_model.py` | Optional; needs `pydot`, which is not in `requirements.txt` |
+**experiments/alphabets/** contains different alphabets (subsets of Zigbee packet types) that can be used for testing. Use `association-nwkEntering.xml` for learning; it matches the symbols the mapper implements.
 
-Java **requires** `-adapter` and `-connect`. The Python SUL currently **ignores `-connect`** and takes the coordinator IEEE from `py/config.yaml` (`zoh_mac` / `hardware_mac` / `zboss_mac`). `-adapter` is used only for `driver_type: hardware` (serial device). For `zoh` and `zboss` it is a dummy required flag.
+**experiments/args/** contains test configurations (lists of PSF arguments) for setups that have already been used.
 
-## Prerequisites
+**experiments/results/** contains results after tests have been run.
 
-Linux. Java 21 + Maven. Python 3. graphviz (`dot`) if you want PDF models.
+**experiments/tests/** contains test sequences of interest. For example, specific test sequences can be run to reproduce bugs.
 
-```bash
-java -version
-mvn -version
-python3 --version
-dot -V
-```
+**scripts/** contains miscellaneous scripts for resetting targets and setting up the Python environment.
 
-Keep the virtualenv **activated** for `java -jar` as well as for Python: jep loads this interpreter.
+## Getting Started
 
-## Setup
+1. Set up and activate a python environment for zigbee-fuzzer: `source scripts/setup_venv.sh`
+2. Build zigbee-fuzzer: `mvn package`
+3. Edit `py/config.yaml` for the target (`driver_type`, addresses, serial device / TCP port, restart commands). The checked-in restart scripts assume a local Zigbee-on-Host or Sonoff helper tree; change the paths if yours differ.
+4. Start the stack or plug in the adapter (for `zoh`, Zigbee-on-Host must be listening on `zoh_host`:`zoh_port`).
+5. Start learning. Keep the venv activated so jep can find the interpreter.
 
-```bash
-source scripts/setup_venv.sh
-mvn package
-```
+Default config is Zigbee-on-Host:
 
-Then edit `py/config.yaml` for the machine you are on:
-
-- `driver_type: "zoh"` — Zigbee-on-Host over TCP (`zoh_host` / `zoh_port`). Default in the file.
-- `driver_type: "hardware"` — WPAN USB serial. `-adapter` must be the real tty.
-- `driver_type: "zboss"` — ZBOSS simulator pipes.
-
-Restart scripts still assume a lab layout (`$HOME/Coding/Thesis/suts/zigbee-on-host` for ZOH, `$HOME/Coding/Thesis/hardware_setup` for the Sonoff helper). Change those scripts if your trees live elsewhere.
-
-## Learning (commands that match the code)
-
-Default config is **zoh**. After Zigbee-on-Host is listening on `127.0.0.1:6000`:
-
-```bash
-source scripts/setup_venv.sh
+```sh
 java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args
 ```
 
-`zoh_args` still passes `-adapter` / `-connect` because PSF requires them; they are unused for ZOH.
+For hardware, set `driver_type: "hardware"` in `py/config.yaml`, then:
 
-For **hardware**, set `driver_type: "hardware"` in `py/config.yaml`, then:
-
-```bash
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/hw_args \
-  -adapter /dev/ttyACM0
+```sh
+java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/hw_args -adapter /dev/ttyACM0
 ```
 
-Replace the tty with your adapter. The coordinator IEEE comes from `hardware_mac` in `config.yaml`, not from `-connect`.
+### Arguments
 
-Equivalent expanded command (same alphabet and bound as the arg files):
+For convenience, most required arguments for ProtocolState-Fuzzer have been collected in files under `experiments/args` and can be used on the command line by prefixing the file with an "@" (see [Getting Started](#getting-started) for an example). A full command to start learning would look like this:
 
-```bash
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar state-fuzzer-server \
-  -output experiments/results/zoh \
-  -alphabet experiments/alphabets/association-nwkEntering.xml \
-  -equivalenceQueryBound 5000 \
-  -logQueries \
-  -adapter unused \
-  -connect unused
+```sh
+java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar state-fuzzer-server -output experiments/results/zoh -alphabet experiments/alphabets/association-nwkEntering.xml -equivalenceQueryBound 5000 -logQueries -adapter unused -connect unused
 ```
 
-## Replay a test sequence
+**state-fuzzer-server** means that a server implementation (a coordinator / stack) is being fuzzed. This is the only supported mode in this setup.
 
-Symbols in the test file must exist in the alphabet **and** in `PACKET_TEMPLATES`. `experiments/tests/simple_hw_test.txt` does:
+**-output** allows specifying a path to a directory where the learned models and statistics will be written to.
 
-```bash
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
-  -test experiments/tests/simple_hw_test.txt \
-  -times 5
+**-alphabet** allows specifying a file with the alphabet (input symbols) used for testing. If unspecified, the default (`src/main/resources/default_alphabet.xml`) will be used. That default still uses symbol names the mapper does not implement; pass `association-nwkEntering.xml` instead.
+
+**-equivalenceQueryBound** allows specifying how many test sequences should be used to check if a generated hypothesis corresponds to the actual behavior of the SUT.
+
+**-logQueries** makes sure that the generated queries are logged for debugging.
+
+**-adapter** must be passed (PSF requires it). For `driver_type: hardware` it is the serial device of the IEEE 802.15.4 adapter. For `zoh` and `zboss` it is unused.
+
+**-connect** must be passed (PSF requires it). The mapper currently takes the coordinator IEEE from `py/config.yaml` (`zoh_mac` / `hardware_mac` / `zboss_mac`), not from this flag.
+
+### Testing Specific Input-Sequences
+
+To test specific input sequences, for example to reproduce a bug, the `-test` flag can be used:
+
+```sh
+java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args -test experiments/tests/simple_hw_test.txt
 ```
 
-## Timing probe
-
-Needs `-test` plus `-probeCmd`. Probe names must be `responseWait` / `startWait` or symbols from the alphabet:
-
-```bash
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
-  -test experiments/tests/simple_hw_test.txt \
-  -probeCmd responseWait,MAC_BEACON_REQUEST,MAC_ASSOCIATION_REQUEST,ZDO_NODE_DESCRIPTOR_REQUEST \
-  -times 7 \
-  -probeLow 0 \
-  -probeHigh 20000 \
-  -probeTol 25 \
-  -probeExport timing_alphabet.txt
-```
-
-## Differential testing
-
-```bash
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar diff-test \
-  -model-a path/to/modelA.dot \
-  -model-b path/to/modelB.dot \
-  -alphabet experiments/alphabets/association-nwkEntering.xml
-```
-
-## Logging
-
-`src/main/resources/log4j2.xml` sets TRACE for this project and PSF. Override with:
-
-```bash
-java -Dlog4j2.configurationFile=/path/to/log4j2.xml -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar ...
-```
+Specify optionally `-times <n>` to run the input sequence multiple times.
 
 ## Credits
 
-Java wiring follows [ble-fuzzer](https://github.com/protocol-fuzzing/ble-fuzzer). Learning/testing/timing/diff-test are ProtocolState-Fuzzer. `scripts/diff_hyps.sh` is from [edhoc-fuzzer](https://github.com/protocol-fuzzing/edhoc-fuzzer).
+* `src/**` PSF wiring follows [protocol-fuzzing/ble-fuzzer](https://github.com/protocol-fuzzing/ble-fuzzer)
+* `scripts/diff_hyps.sh` is copied from [protocol-fuzzing/edhoc-fuzzer](https://github.com/protocol-fuzzing/edhoc-fuzzer)
