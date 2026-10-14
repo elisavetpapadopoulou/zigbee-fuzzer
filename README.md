@@ -41,8 +41,10 @@ dot -V
 `mvn -version` must report Java 21. On Debian/Ubuntu:
 
 ```sh
-sudo apt install openjdk-21-jdk maven graphviz python3 python3-venv python3-pip
+sudo apt install openjdk-21-jdk maven graphviz python3 python3-venv python3-pip python3-dev g++
 ```
+
+`python3-dev` and `g++` are required to **compile jep**. `pip install jep` builds a native module; it is not a pure-Python wheel on most machines.
 
 On a cluster, load the matching modules instead (`module load` Java 21 and Maven) so `java` and `mvn` are on `PATH`.
 
@@ -50,20 +52,41 @@ On a cluster, load the matching modules instead (`module load` Java 21 and Maven
 
 ## 2. Build the fuzzer
 
+Set `JAVA_HOME` to the **JDK** (needed both to compile jep and to run Maven):
+
+```sh
+export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
+echo "$JAVA_HOME"
+```
+
+Then:
+
 ```sh
 source scripts/setup_venv.sh
+```
+
+The script always runs `python -m pip install -r requirements.txt` (including **jep 4.3.2**). It must print `jep OK: .../site-packages/jep`. Confirm with the **venv** interpreter, not a random `python3`:
+
+```sh
+which python
+python -c "import jep; print(jep.__file__)"
+```
+
+`which python` must be `.../zigbee-fuzzer/venv/bin/python`. If `import jep` fails, jep never installed — see [If something fails](#7-if-something-fails).
+
+Build the jar (venv can stay active; Maven does not use it):
+
+```sh
 mvn package
 ```
 
-`setup_venv.sh` creates `venv/` if needed and installs `requirements.txt` (including **jep 4.3.2**, which must match the Java jep dependency in `pom.xml`). Leave the venv activated for every `java -jar` command.
-
 You should get `target/zigbee-fuzzer-1.0-SNAPSHOT.jar`.
 
-If Java cannot load jep after `mvn package`:
+Before `java -jar`, keep the venv active and point the JVM at that Python:
 
 ```sh
-python3 -c "import jep, pathlib; print(pathlib.Path(jep.__file__).parent)"
-export LD_LIBRARY_PATH="$(python3 -c "import jep, pathlib; print(pathlib.Path(jep.__file__).parent)"):$LD_LIBRARY_PATH"
+export PYTHONHOME="$VIRTUAL_ENV"
+export LD_LIBRARY_PATH="$(python -c "import jep, pathlib; print(pathlib.Path(jep.__file__).parent)"):${LD_LIBRARY_PATH:-}"
 ```
 
 ---
@@ -113,6 +136,8 @@ Replay a short association-like sequence. This checks jep, Python imports, and t
 
 ```sh
 source scripts/setup_venv.sh
+export PYTHONHOME="$VIRTUAL_ENV"
+export LD_LIBRARY_PATH="$(python -c "import jep, pathlib; print(pathlib.Path(jep.__file__).parent)"):${LD_LIBRARY_PATH:-}"
 java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
   -test experiments/tests/simple_hw_test.txt \
   -times 1
@@ -278,9 +303,10 @@ java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
 | --- | --- |
 | `mvn: command not found` | JDK/Maven not installed; venv does not provide `mvn` |
 | `mvn` uses Java 11/17 | Point `JAVA_HOME` at JDK 21 |
-| `No module named 'yaml'` | Recreate venv or `pip install -r requirements.txt` |
+| `No module named 'yaml'` | Recreate venv or `python -m pip install -r requirements.txt` |
+| `No module named 'jep'` | Jep never built into **this** Python. Activate venv (`which python` must end with `venv/bin/python`), set `JAVA_HOME` to a JDK, install `python3-dev g++`, then `python -m pip install --force-reinstall --no-cache-dir jep==4.3.2`. If `venv/` was created before that, run `source scripts/setup_venv.sh` again (it now always pip-installs) or `rm -rf venv` and start over. Java-side: `export PYTHONHOME="$VIRTUAL_ENV"` before `java -jar`. |
 | `from ZigbeeSUL import ZigbeeSUL` fails | Not running from the repo root, or venv not active |
-| UnsatisfiedLinkError / jep | jep 4.3.2 missing in venv, or `LD_LIBRARY_PATH` (see §2) |
+| UnsatisfiedLinkError / jep | Native `libjep` not found: set `LD_LIBRARY_PATH` to `site-packages/jep` (see §2) |
 | Hang on ZOH connect | Nothing on port 6000, or `ZOH_ROOT` wrong |
 | `KeyError` / unimplemented symbol | Alphabet is not `association-nwkEntering.xml` |
 | Hardware opens the wrong tty | Pass `-adapter` (yaml `hardware_port` is not what Java opens) |
