@@ -65,14 +65,21 @@ Then:
 source scripts/setup_venv.sh
 ```
 
-The script always runs `python -m pip install -r requirements.txt` (including **jep 4.3.2**). It must print `jep OK: .../site-packages/jep`. Confirm with the **venv** interpreter, not a random `python3`:
+The script always runs `python -m pip install -r requirements.txt` (including **jep 4.3.2**). It must print `jep OK: .../site-packages/jep` and then set `PYTHONHOME` / `LD_LIBRARY_PATH` for the JVM.
+
+Confirm with the **venv** interpreter, not a random `python3`:
 
 ```sh
 which python
-python -c "import jep; print(jep.__file__)"
+python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)"
+ls "$(python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)")"/libjep*
 ```
 
-`which python` must be `.../zigbee-fuzzer/venv/bin/python`. If `import jep` fails, jep never installed — see [If something fails](#7-if-something-fails).
+`which python` must be `.../zigbee-fuzzer/venv/bin/python`. You should see `libjep.so`.
+
+Do **not** use `python -c "import jep"`. Jep embeds CPython **inside Java**, so that command is supposed to fail with `Jep is not supported in standalone Python, it must be embedded in Java.` That message means the package is installed.
+
+If the package or `libjep.so` is missing, see [If something fails](#7-if-something-fails).
 
 Build the jar (venv can stay active; Maven does not use it):
 
@@ -82,11 +89,17 @@ mvn package
 
 You should get `target/zigbee-fuzzer-1.0-SNAPSHOT.jar`.
 
-Before `java -jar`, keep the venv active and point the JVM at that Python:
+Before `java -jar`, keep the venv active. `source scripts/setup_venv.sh` already exports `PYTHONHOME` and `LD_LIBRARY_PATH`. If you opened a new shell:
+
+```sh
+source scripts/setup_venv.sh
+```
+
+Or set them yourself (still **without** `import jep`):
 
 ```sh
 export PYTHONHOME="$VIRTUAL_ENV"
-export LD_LIBRARY_PATH="$(python -c "import jep, pathlib; print(pathlib.Path(jep.__file__).parent)"):${LD_LIBRARY_PATH:-}"
+export LD_LIBRARY_PATH="$(python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)"):${LD_LIBRARY_PATH:-}"
 ```
 
 ---
@@ -136,8 +149,6 @@ Replay a short association-like sequence. This checks jep, Python imports, and t
 
 ```sh
 source scripts/setup_venv.sh
-export PYTHONHOME="$VIRTUAL_ENV"
-export LD_LIBRARY_PATH="$(python -c "import jep, pathlib; print(pathlib.Path(jep.__file__).parent)"):${LD_LIBRARY_PATH:-}"
 java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
   -test experiments/tests/simple_hw_test.txt \
   -times 1
@@ -147,7 +158,7 @@ If this hangs or times out, ZOH is not listening on `127.0.0.1:6000`, `ZOH_ROOT`
 
 ### 4.3 Short learning run (minutes)
 
-A bound of 5000 equivalence queries is a long thesis run. For a first experiment, cap the number of learning rounds:
+A bound of 5000 equivalence queries is a long thesis run. For a first experiment, cap the number of learning rounds. Stay in the shell where `setup_venv.sh` was sourced (so `PYTHONHOME` is set):
 
 ```sh
 mkdir -p experiments/results/zoh-smoke
@@ -304,7 +315,9 @@ java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
 | `mvn: command not found` | JDK/Maven not installed; venv does not provide `mvn` |
 | `mvn` uses Java 11/17 | Point `JAVA_HOME` at JDK 21 |
 | `No module named 'yaml'` | Recreate venv or `python -m pip install -r requirements.txt` |
-| `No module named 'jep'` | Jep never built into **this** Python. Activate venv (`which python` must end with `venv/bin/python`), set `JAVA_HOME` to a JDK, install `python3-dev g++`, then `python -m pip install --force-reinstall --no-cache-dir jep==4.3.2`. If `venv/` was created before that, run `source scripts/setup_venv.sh` again (it now always pip-installs) or `rm -rf venv` and start over. Java-side: `export PYTHONHOME="$VIRTUAL_ENV"` before `java -jar`. |
+| `No module named 'jep'` (from **Java** / learning) | Native `libjep` not on the JVM path, or venv not the one Java embeds. `source scripts/setup_venv.sh` (it exports `PYTHONHOME` and `LD_LIBRARY_PATH`), then retry `java -jar`. |
+| `Jep is not supported in standalone Python` | Expected. Do not `import jep` from a Python shell. Run `java -jar` instead. |
+| `jep package not found` / no `libjep.so` | Jep never built into **this** Python. Activate venv (`which python` must end with `venv/bin/python`), set `JAVA_HOME` to a JDK, install `python3-dev g++`, then `python -m pip install --force-reinstall --no-cache-dir jep==4.3.2`. If `venv/` was created before that, `rm -rf venv` and `source scripts/setup_venv.sh`. |
 | `from ZigbeeSUL import ZigbeeSUL` fails | Not running from the repo root, or venv not active |
 | UnsatisfiedLinkError / jep | Native `libjep` not found: set `LD_LIBRARY_PATH` to `site-packages/jep` (see §2) |
 | Hang on ZOH connect | Nothing on port 6000, or `ZOH_ROOT` wrong |
