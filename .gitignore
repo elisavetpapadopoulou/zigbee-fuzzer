@@ -6,3 +6,13 @@
 target/
 *.jar
 *.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Build artifacts
+target/
+*.egg-info/
+__pycache__/
