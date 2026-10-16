@@ -41,7 +41,7 @@ dot -V
 `mvn -version` must report Java 21. On Debian/Ubuntu:
 
 ```sh
-sudo apt install openjdk-21-jdk maven graphviz python3 python3-venv python3-pip python3-dev g++
+sudo apt install openjdk-21-jdk maven graphviz python3 python3-venv python3-pip python3-dev libffi-dev g++
 ```
 
 `python3-dev` and `g++` are required to **compile jep**. `pip install jep` builds a native module; it is not a pure-Python wheel on most machines.
@@ -56,7 +56,6 @@ Set `JAVA_HOME` to the **JDK** (needed both to compile jep and to run Maven):
 
 ```sh
 export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
-echo "$JAVA_HOME"
 ```
 
 Then:
