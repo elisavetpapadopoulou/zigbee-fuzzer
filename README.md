@@ -66,20 +66,6 @@ source scripts/setup_venv.sh
 
 The script always runs `python -m pip install -r requirements.txt` (including **jep 4.3.2**). It must print `jep OK: .../site-packages/jep` and then set `PYTHONHOME` / `LD_LIBRARY_PATH` for the JVM.
 
-Confirm with the **venv** interpreter, not a random `python3`:
-
-```sh
-which python
-python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)"
-ls "$(python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)")"/libjep*
-```
-
-`which python` must be `.../zigbee-fuzzer/venv/bin/python`. You should see `libjep.so`.
-
-Do **not** use `python -c "import jep"`. Jep embeds CPython **inside Java**, so that command is supposed to fail with `Jep is not supported in standalone Python, it must be embedded in Java.` That message means the package is installed.
-
-If the package or `libjep.so` is missing, see [If something fails](#7-if-something-fails).
-
 Build the jar (venv can stay active; Maven does not use it):
 
 ```sh
@@ -87,19 +73,6 @@ mvn package
 ```
 
 You should get `target/zigbee-fuzzer-1.0-SNAPSHOT.jar`.
-
-Before `java -jar`, keep the venv active. `source scripts/setup_venv.sh` already exports `PYTHONHOME` and `LD_LIBRARY_PATH`. If you opened a new shell:
-
-```sh
-source scripts/setup_venv.sh
-```
-
-Or set them yourself (still **without** `import jep`):
-
-```sh
-export PYTHONHOME="$VIRTUAL_ENV"
-export LD_LIBRARY_PATH="$(python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)"):${LD_LIBRARY_PATH:-}"
-```
 
 ---
 
@@ -137,6 +110,7 @@ This is the path you can follow without an RF dongle, if you have a Zigbee-on-Ho
 ```sh
 export ZOH_ROOT=/absolute/path/to/zigbee-on-host
 ```
+Important note: zigbee-fuzzer is currently compatible to zigbee-on-host commit hash fab65af. Before running, make sure to checkout the remote repo to this hash. 
 
 That tree must already build (`npm` / Node). First time, form a network once by hand if needed, and copy the coordinator IEEE into `py/config.yaml` as `zoh_mac`.
 
