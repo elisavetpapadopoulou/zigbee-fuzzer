@@ -76,9 +76,9 @@ _zigbee_jep_native "$_jep_dir" || {
 
 echo "jep OK: $_jep_dir"
 
-export PYTHONHOME="${VIRTUAL_ENV}"
+# export PYTHONHOME="${VIRTUAL_ENV}"
 export LD_LIBRARY_PATH="${_jep_dir}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-echo "PYTHONHOME=$PYTHONHOME"
+# echo "PYTHONHOME=$PYTHONHOME"
 echo "LD_LIBRARY_PATH includes $_jep_dir"
 
 if ! command -v mvn >/dev/null 2>&1; then
