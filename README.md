@@ -24,13 +24,17 @@ A Linux environment is required. The Python virtual environment does **not** ins
 | **libffi & C++ compiler** | Compile `cffi` and `jep` native extensions |
 | **graphviz (`dot`)** | Export learned Mealy machine models to PDF |
 
+### Zigbee-Fuzzer clone repo
+
+```sh
+git clone https://github.com/elisavetpapadopoulou/zigbee-fuzzer.git
+```
+
 ### Package Installation (Debian / Ubuntu)
 
 ```sh
-sudo apt update
 sudo apt install -y openjdk-21-jdk maven graphviz python3 python3-venv python3-pip python3-dev libffi-dev g++
 ```
-*(Note: If running as root inside a minimal container, omit `sudo`.)*
 
 ### Verification
 
@@ -43,7 +47,7 @@ python3 --version
 dot -V
 ```
 
-`mvn -version` must report runtime `Java version: 21`. On high-performance clusters, load the matching modules instead (`module load openjdk/21` and `module load maven`).
+`mvn -version` must report runtime `Java version: 21`. 
 
 ---
 
@@ -55,6 +59,8 @@ JEP compiles native C bindings during installation and requires `JAVA_HOME` poin
 
 ```sh
 export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
+```
+```sh
 echo "$JAVA_HOME"
 # Expected output similar to: /usr/lib/jvm/java-21-openjdk-amd64
 ```
@@ -66,17 +72,6 @@ Run the setup script from the repository root to create the local virtual enviro
 ```sh
 source scripts/setup_venv.sh
 ```
-
-The script sets up `LD_LIBRARY_PATH` for the JVM. Confirm with the **venv** interpreter:
-
-```sh
-which python
-ls "$(python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)")"/libjep*
-```
-
-* `which python` must resolve to `.../zigbee-fuzzer/venv/bin/python`.
-* You should see `libjep.so` listed in the directory.
-* **Do not test with `python -c "import jep"`**. JEP embeds CPython **inside Java**, so direct import from Python is expected to fail with `Jep is not supported in standalone Python, it must be embedded in Java.`
 
 ### 2.3 Compile the Java Jar
 
@@ -118,58 +113,39 @@ Zigbee-on-Host (ZOH) allows software testing without physical RF hardware by hav
 ### 4.1 Install and Configure Zigbee-on-Host
 
 1. **Clone ZOH and checkout the verified commit:**
+   (See zigbee-on-host github for more information)
    ```sh
    git clone https://github.com/Nerivec/zigbee-on-host.git
+   ```
+   ```sh
    cd zigbee-on-host
+   ```
+   ```sh
    git checkout fab65af
+   ```
+   ```sh
    npm install
+   ```
+   ```sh
    npm run build
    ```
 
 2. **Configure the virtual socket adapter:**
-   Create `dist/dev/conf.json` so ZOH connects to the fuzzer's TCP bridge:
+   Edit `dist/dev/conf.json`'s adapter path field so ZOH connects to the fuzzer's TCP bridge:
    ```sh
-   mkdir -p dist/dev
-   cat << 'EOF' > dist/dev/conf.json
-   {
+   vi dist/dev/conf.json
+   ```
+   ```sh
+   ...
        "adapter": {
            "path": "tcp://127.0.0.1:6000"
-       },
-       "streamRaw": {
-           "txChannel": 25,
-           "ccaBackoffAttempts": 1,
-           "ccaRetries": 4,
-           "enableCSMACA": true,
-           "headerUpdated": true,
-           "reTx": false,
-           "securityProcessed": true,
-           "txDelay": 0,
-           "txDelayBaseTime": 0,
-           "rxChannelAfterTxDone": 25
-       },
-       "network": {
-           "tcKey": [90, 105, 103, 66, 101, 101, 65, 108, 108, 105, 97, 110, 99, 101, 48, 57],
-           "tcKeyFrameCounter": 0,
-           "networkKey": [1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 13],
-           "networkKeyFrameCounter": 0,
-           "networkKeySequenceNumber": 0,
-           "panId": 26979,
-           "extendedPANId": [17, 221, 34, 221, 51, 221, 68, 221],
-           "channel": 25,
-           "eui64": [99, 108, 105, 99, 108, 105, 99, 108],
-           "nwkUpdateId": 0,
-           "txPower": 19
-       },
-       "sendMACToZEP": false,
-       "tiSerialSkipBootloader": false
-   }
-   EOF
+      }
+   ...
    ```
 
 3. **Export the path in your shell:**
    Return to `zigbee-fuzzer` and point `ZOH_ROOT` to your cloned tree:
    ```sh
-   cd /path/to/zigbee-fuzzer
    export ZOH_ROOT=/path/to/zigbee-on-host
    ```
 
@@ -184,7 +160,6 @@ java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
   -times 1
 ```
 
-If this hangs or fails with `TimeoutError: Zigbee stack did not connect in time`, verify `ZOH_ROOT` is set, `dist/dev/conf.json` exists in ZOH, and inspect `.logs/dev-cli.log`.
 
 ### 4.3 Learning Runs
 
