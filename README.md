@@ -2,34 +2,39 @@
 
 This is a test setup to apply protocol state fuzzing to Zigbee coordinators and stacks. It is built upon the [ProtocolState-Fuzzer](https://github.com/protocol-fuzzing/protocol-state-fuzzer) framework and can be used to either test a hardware IEEE 802.15.4 adapter over-the-air or to test a Zigbee-on-Host (or ZBOSS) stack in a Linux process.
 
-**src/** contains code that configures ProtocolState-Fuzzer (PSF) and acts as a bridge between PSF and the mapper. This is done using [jep](https://github.com/ninia/jep), which allows embedding a CPython interpreter in a Java process.
-
-**py/** contains the mapper. `ZigbeeSUL` uses Scapy to construct and parse IEEE 802.15.4 / Zigbee packets. The radio or stack is selected in `py/config.yaml` (`driver_type`: `hardware`, `zoh`, or `zboss`).
-
-**experiments/alphabets/** contains different alphabets (subsets of Zigbee packet types) that can be used for testing. Use `association-nwkEntering.xml` for learning; it matches the symbols the mapper implements.
-
-**experiments/args/** contains test configurations (lists of PSF arguments) for setups that have already been used.
-
-**experiments/results/** contains results after tests have been run.
-
-**experiments/tests/** contains test sequences of interest. For example, specific test sequences can be run to reproduce bugs.
-
-**scripts/** contains miscellaneous scripts for resetting targets and setting up the Python environment.
-
-All commands below assume you are in the **repository root** with the Python venv **activated**. Java loads `py/` as a relative path (`sys.path.insert(0, 'py')`).
+* **`src/`** contains code that configures ProtocolState-Fuzzer (PSF) and acts as a bridge between PSF and the mapper. This is done using [jep](https://github.com/ninia/jep), which allows embedding a CPython interpreter in a Java process.
+* **`py/`** contains the mapper. `ZigbeeSUL` uses Scapy to construct and parse IEEE 802.15.4 / Zigbee packets. The radio or stack is selected in `py/config.yaml` (`driver_type`: `hardware`, `zoh`, or `zboss`).
+* **`experiments/alphabets/`** contains different alphabets (subsets of Zigbee packet types) that can be used for testing. Use `association-nwkEntering.xml` for learning; it matches the symbols the mapper implements.
+* **`experiments/args/`** contains test configurations (lists of PSF arguments) for setups that have already been used.
+* **`experiments/results/`** contains results after tests have been run.
+* **`experiments/tests/`** contains test sequences of interest (e.g., replaying specific sequences to reproduce bugs).
+* **`scripts/`** contains miscellaneous scripts for resetting targets and setting up the Python environment.
 
 ---
 
 ## 1. Prerequisites
 
-Linux. The Python venv does **not** install Maven or the JDK.
+A Linux environment is required. The Python virtual environment does **not** install Maven or the JDK.
 
 | Tool | Why |
 | --- | --- |
-| Java **21** JDK | Compile and run the shaded jar |
-| Maven | `mvn package` |
-| Python 3 | Mapper + jep |
-| graphviz (`dot`) | PSF exports learned models to PDF |
+| **Java 21 JDK** | Compile and run the shaded jar |
+| **Maven** | Build the project (`mvn package`) |
+| **Python 3** | Mapper runtime and Scapy packet parsing |
+| **libffi & C++ compiler** | Compile `cffi` and `jep` native extensions |
+| **graphviz (`dot`)** | Export learned Mealy machine models to PDF |
+
+### Package Installation (Debian / Ubuntu)
+
+```sh
+sudo apt update
+sudo apt install -y openjdk-21-jdk maven graphviz python3 python3-venv python3-pip python3-dev libffi-dev g++
+```
+*(Note: If running as root inside a minimal container, omit `sudo`.)*
+
+### Verification
+
+Ensure toolchains are accessible and Maven points to Java 21:
 
 ```sh
 java -version
@@ -38,113 +43,139 @@ python3 --version
 dot -V
 ```
 
-`mvn -version` must report Java 21. On Debian/Ubuntu:
-
-```sh
-sudo apt install openjdk-21-jdk maven graphviz python3 python3-venv python3-pip python3-dev libffi-dev g++
-```
-
-`python3-dev` and `g++` are required to **compile jep**. `pip install jep` builds a native module; it is not a pure-Python wheel on most machines.
-
-On a cluster, load the matching modules instead (`module load` Java 21 and Maven) so `java` and `mvn` are on `PATH`.
+`mvn -version` must report runtime `Java version: 21`. On high-performance clusters, load the matching modules instead (`module load openjdk/21` and `module load maven`).
 
 ---
 
-## 2. Build the fuzzer
+## 2. Build the Fuzzer
 
-Set `JAVA_HOME` to the **JDK** (needed both to compile jep and to run Maven):
+### 2.1 Set `JAVA_HOME`
+
+JEP compiles native C bindings during installation and requires `JAVA_HOME` pointing to a JDK:
 
 ```sh
 export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
+echo "$JAVA_HOME"
+# Expected output similar to: /usr/lib/jvm/java-21-openjdk-amd64
 ```
 
-Then:
+### 2.2 Initialize the Python Environment
+
+Run the setup script from the repository root to create the local virtual environment (`venv/`) and build dependencies (including **jep 4.3.2** and **pycryptodomex**):
 
 ```sh
 source scripts/setup_venv.sh
 ```
 
-The script always runs `python -m pip install -r requirements.txt` (including **jep 4.3.2**). It must print `jep OK: .../site-packages/jep` and then set `PYTHONHOME` / `LD_LIBRARY_PATH` for the JVM.
-
-Confirm with the **venv** interpreter, not a random `python3`:
+The script sets up `LD_LIBRARY_PATH` for the JVM. Confirm with the **venv** interpreter:
 
 ```sh
 which python
-python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)"
 ls "$(python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)")"/libjep*
 ```
 
-`which python` must be `.../zigbee-fuzzer/venv/bin/python`. You should see `libjep.so`.
+* `which python` must resolve to `.../zigbee-fuzzer/venv/bin/python`.
+* You should see `libjep.so` listed in the directory.
+* **Do not test with `python -c "import jep"`**. JEP embeds CPython **inside Java**, so direct import from Python is expected to fail with `Jep is not supported in standalone Python, it must be embedded in Java.`
 
-Do **not** use `python -c "import jep"`. Jep embeds CPython **inside Java**, so that command is supposed to fail with `Jep is not supported in standalone Python, it must be embedded in Java.` That message means the package is installed.
+### 2.3 Compile the Java Jar
 
-If the package or `libjep.so` is missing, see [If something fails](#7-if-something-fails).
-
-Build the jar (venv can stay active; Maven does not use it):
+Build the shaded executable jar (the virtual environment can stay active; Maven does not interfere with it):
 
 ```sh
 mvn package
 ```
 
-You should get `target/zigbee-fuzzer-1.0-SNAPSHOT.jar`.
-
-Before `java -jar`, keep the venv active. `source scripts/setup_venv.sh` already exports `PYTHONHOME` and `LD_LIBRARY_PATH`. If you opened a new shell:
-
-```sh
-source scripts/setup_venv.sh
-```
-
-Or set them yourself (still **without** `import jep`):
-
-```sh
-export PYTHONHOME="$VIRTUAL_ENV"
-export LD_LIBRARY_PATH="$(python -c "import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec('jep').origin).parent)"):${LD_LIBRARY_PATH:-}"
-```
+The compiled artifact is generated at `target/zigbee-fuzzer-1.0-SNAPSHOT.jar`.
 
 ---
 
-## 3. Configure the mapper
+## 3. Configure the Mapper
 
-Edit `py/config.yaml`. **`driver_type` is what selects the SUT**, not the Java flags.
+Target selection is controlled through `py/config.yaml`. **`driver_type` is what selects the SUT**, not the Java flags.
 
-| Field | Meaning |
+| Field | Description |
 | --- | --- |
 | `driver_type` | `zoh` (default), `hardware`, or `zboss` |
-| `zoh_host` / `zoh_port` | TCP address of Zigbee-on-Host (default `127.0.0.1:6000`) |
-| `zoh_mac` | Coordinator IEEE used by the mapper (hex int, e.g. `0x6c63696c63696c63`) |
-| `zoh_timeout` | Seconds to wait for a response |
-| `zoh_restart_cmd` | Command run to reset ZOH between queries (default `scripts/restartZOHStack.sh`) |
-| `hardware_mac` | Coordinator IEEE for over-the-air runs |
-| `hardware_port` | Noted in yaml; the **serial device actually opened** is Java `-adapter` |
-| `baud_rate` / `channel` | Adapter UART and 802.15.4 channel (default 115200, channel 20) |
-| `hardware_timeout` | Seconds to wait for a response |
-| `hardware_restart_cmd` | Reset the coordinator between queries |
+| `zoh_host` / `zoh_port` | TCP server address bound by the fuzzer (default `127.0.0.1:6000`) |
+| `zoh_mac` | Coordinator IEEE address expected by the mapper (`0x6c63696c63696c63`) |
+| `zoh_timeout` | Seconds to wait for stack responses before timing out |
+| `zoh_restart_cmd` | Command executed to reset/form ZOH between queries (`scripts/restartZOHStack.sh`) |
+| `hardware_mac` | Coordinator IEEE for over-the-air hardware runs |
+| `hardware_port` | Reference port; the **serial device actually opened** is passed via Java `-adapter` |
+| `baud_rate` / `channel` | Adapter UART baud rate and 802.15.4 radio channel (default `115200`, channel `20`) |
+| `hardware_restart_cmd` | Command executed to reset the hardware coordinator between queries |
 
-Java still **requires** `-adapter` and `-connect`. `-connect` is currently **ignored** by Python (IEEE comes from this yaml). `-adapter` is used only when `driver_type` is `hardware`.
-
-Use `experiments/alphabets/association-nwkEntering.xml`. Do **not** omit `-alphabet`: the packaged default still uses `APS_REQUEST_KEY` / `APS_VERIFY_KEY`, which the mapper does not implement.
+* Always specify `-alphabet experiments/alphabets/association-nwkEntering.xml`. Do not omit it, as default fallback symbols are not implemented by the mapper.
+* Java command-line flags require `-adapter` and `-connect`. When `driver_type` is `zoh`, pass dummy strings (e.g., `-adapter unused -connect unused`).
 
 ---
 
-## 4. Run an experiment (Zigbee-on-Host)
+## 4. Run an Experiment (Zigbee-on-Host)
 
-This is the path you can follow without an RF dongle, if you have a Zigbee-on-Host tree that exposes Spinel/raw frames on TCP port 6000.
+Zigbee-on-Host (ZOH) allows software testing without physical RF hardware by having the stack connect to the fuzzer over a local TCP socket (`127.0.0.1:6000`).
 
-### 4.1 Point the restart script at your ZOH tree
+### 4.1 Install and Configure Zigbee-on-Host
 
-`scripts/restartZOHStack.sh` runs `npm run dev:cli form yes` in the ZOH directory (forms a coordinator, then the fuzzer joins). Override the default lab path:
+1. **Clone ZOH and checkout the verified commit:**
+   ```sh
+   git clone https://github.com/Nerivec/zigbee-on-host.git
+   cd zigbee-on-host
+   git checkout fab65af
+   npm install
+   npm run build
+   ```
 
-```sh
-export ZOH_ROOT=/absolute/path/to/zigbee-on-host
-```
+2. **Configure the virtual socket adapter:**
+   Create `dist/dev/conf.json` so ZOH connects to the fuzzer's TCP bridge:
+   ```sh
+   mkdir -p dist/dev
+   cat << 'EOF' > dist/dev/conf.json
+   {
+       "adapter": {
+           "path": "tcp://127.0.0.1:6000"
+       },
+       "streamRaw": {
+           "txChannel": 25,
+           "ccaBackoffAttempts": 1,
+           "ccaRetries": 4,
+           "enableCSMACA": true,
+           "headerUpdated": true,
+           "reTx": false,
+           "securityProcessed": true,
+           "txDelay": 0,
+           "txDelayBaseTime": 0,
+           "rxChannelAfterTxDone": 25
+       },
+       "network": {
+           "tcKey": [90, 105, 103, 66, 101, 101, 65, 108, 108, 105, 97, 110, 99, 101, 48, 57],
+           "tcKeyFrameCounter": 0,
+           "networkKey": [1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 13],
+           "networkKeyFrameCounter": 0,
+           "networkKeySequenceNumber": 0,
+           "panId": 26979,
+           "extendedPANId": [17, 221, 34, 221, 51, 221, 68, 221],
+           "channel": 25,
+           "eui64": [99, 108, 105, 99, 108, 105, 99, 108],
+           "nwkUpdateId": 0,
+           "txPower": 19
+       },
+       "sendMACToZEP": false,
+       "tiSerialSkipBootloader": false
+   }
+   EOF
+   ```
 
-That tree must already build (`npm` / Node). First time, form a network once by hand if needed, and copy the coordinator IEEE into `py/config.yaml` as `zoh_mac`.
+3. **Export the path in your shell:**
+   Return to `zigbee-fuzzer` and point `ZOH_ROOT` to your cloned tree:
+   ```sh
+   cd /path/to/zigbee-fuzzer
+   export ZOH_ROOT=/path/to/zigbee-on-host
+   ```
 
-Leave `driver_type : "zoh"` in `py/config.yaml`.
+### 4.2 Smoke-Test the Mapper
 
-### 4.2 Smoke-test the mapper (seconds)
-
-Replay a short association-like sequence. This checks jep, Python imports, and that ZOH accepts frames, without running a full learner.
+Replay a short association test sequence from the fuzzer repository root. This checks JEP, Python imports, and that ZOH joins and exchanges frames with the fuzzer:
 
 ```sh
 source scripts/setup_venv.sh
@@ -153,93 +184,62 @@ java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
   -times 1
 ```
 
-If this hangs or times out, ZOH is not listening on `127.0.0.1:6000`, `ZOH_ROOT` is wrong, or `zoh_mac` does not match the coordinator. Watch `.logs/dev-cli.log` (created by the restart script).
+If this hangs or fails with `TimeoutError: Zigbee stack did not connect in time`, verify `ZOH_ROOT` is set, `dist/dev/conf.json` exists in ZOH, and inspect `.logs/dev-cli.log`.
 
-### 4.3 Short learning run (minutes)
+### 4.3 Learning Runs
 
-A bound of 5000 equivalence queries is a long thesis run. For a first experiment, cap the number of learning rounds. Stay in the shell where `setup_venv.sh` was sourced (so `PYTHONHOME` is set):
+* **Short learning trial (capped rounds):**
+  ```sh
+  mkdir -p experiments/results/zoh-smoke
+  java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
+    -output experiments/results/zoh-smoke \
+    -roundLimit 4
+  ```
 
-```sh
-mkdir -p experiments/results/zoh-smoke
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
-  -output experiments/results/zoh-smoke \
-  -roundLimit 4
-```
-
-### 4.4 Full learning run (hours)
-
-```sh
-mkdir -p experiments/results/zoh
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args
-```
-
-That uses `-equivalenceQueryBound 5000` and writes under `experiments/results/zoh`.
-
-### 4.5 What to look at
-
-In the `-output` directory PSF writes at least:
-
-| File | Meaning |
-| --- | --- |
-| `learnedModel.dot` | Last hypothesis (open with xdot, or `dot -Tpdf`) |
-| `hyp1.dot`, `hyp2.dot`, … | Intermediate hypotheses |
-| `statistics.txt` | Query counts and timing |
-| `alphabet.xml` | Copy of the alphabet used |
-| `command.args` | Flags for that run |
-| `error.msg` | Present if the run died |
-
-```sh
-dot -Tpdf experiments/results/zoh-smoke/learnedModel.dot -o learnedModel.pdf
-```
+* **Full learning run:**
+  ```sh
+  mkdir -p experiments/results/zoh
+  java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
+    -output experiments/results/zoh
+  ```
 
 ---
 
-## 5. Run an experiment (hardware)
+## 5. Run an Experiment (Hardware)
 
-You need:
+Hardware testing requires:
+* An IEEE 802.15.4 USB adapter for packet injection (default baud 115200).
+* A physical coordinator on **channel 20** (matching `py/config.yaml`) with its IEEE configured in `hardware_mac`.
 
-- An IEEE 802.15.4 USB adapter the mapper can inject on (WPAN serial; default baud 115200).
-- A coordinator on **channel 20** (or change `channel` in yaml) whose IEEE you put in `hardware_mac`.
+### 5.1 Configuration
 
-### 5.1 Configure
-
-In `py/config.yaml`:
+Edit `py/config.yaml`:
 
 ```yaml
-driver_type : "hardware"
-hardware_mac : 0x00124b003a053efe   # your coordinator IEEE
-channel : 20
+driver_type: "hardware"
+hardware_mac: 0x00124b003a053efe   # Set to coordinator IEEE
+channel: 20
 ```
 
-If the coordinator is reset between queries via `scripts/restartSonoffCoord.sh`, point it at your helper tree and dongle:
+If using `scripts/restartSonoffCoord.sh` for coordinator resets:
 
 ```sh
 export HARDWARE_SETUP=/absolute/path/to/hardware_setup
 export SONOFF_PORT=/dev/ttyUSB0
 ```
 
-That script restores a `baseline_backup.json` with `zigpy_znp` and starts `sonoff_coord_app.py`. Skip or edit it if you reset the coordinator some other way; then change `hardware_restart_cmd` in yaml accordingly.
-
-Find the **mapper** adapter (not the coordinator UART):
+Locate the injection adapter device:
 
 ```sh
-ls /dev/serial/by-id/
-ls /dev/ttyACM*
+ls /dev/ttyACM* /dev/serial/by-id/*
 ```
 
-### 5.2 Smoke-test, then learn
+### 5.2 Execute Hardware Run
+
+From the repository root:
 
 ```sh
 source scripts/setup_venv.sh
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/hw_args \
-  -adapter /dev/ttyACM0 \
-  -test experiments/tests/simple_hw_test.txt \
-  -times 1
-```
-
-Replace `/dev/ttyACM0` with your adapter. Then a short or full run:
-
-```sh
 java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/hw_args \
   -adapter /dev/ttyACM0 \
   -output experiments/results/hardware_trial \
@@ -248,84 +248,43 @@ java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/hw_args \
 
 ---
 
-## 6. Arguments
+## 6. Output Artifacts
 
-Most required arguments are in `experiments/args` and can be passed by prefixing the file with `@`. Later flags override the file. A full learning command looks like this:
+In the `-output` directory, ProtocolState-Fuzzer writes:
 
-```sh
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar state-fuzzer-server \
-  -output experiments/results/zoh \
-  -alphabet experiments/alphabets/association-nwkEntering.xml \
-  -equivalenceQueryBound 5000 \
-  -logQueries \
-  -adapter unused \
-  -connect unused
-```
+| File | Description |
+| --- | --- |
+| `learnedModel.dot` | Final learned state machine hypothesis |
+| `hyp1.dot`, `hyp2.dot`, … | Intermediate hypotheses generated per learning round |
+| `statistics.txt` | Query counts, cache performance, and runtime timing |
+| `alphabet.xml` | Snapshot of the alphabet configuration used |
+| `command.args` | Copy of the command-line flags for reproducibility |
+| `error.msg` | Error details if a test run terminates unexpectedly |
 
-**state-fuzzer-server** means that a server implementation (a coordinator / stack) is being fuzzed. This is the only supported mode.
-
-**-output** directory for learned models and statistics.
-
-**-alphabet** input symbols. Always pass `experiments/alphabets/association-nwkEntering.xml` for this mapper.
-
-**-equivalenceQueryBound** how many tests to use when checking a hypothesis. `5000` is the value used in the arg files.
-
-**-roundLimit** stop after this many learning rounds. Use this for a first experiment.
-
-**-logQueries** log membership / equivalence queries.
-
-**-adapter** required. Serial device for hardware; dummy string for `zoh` / `zboss`.
-
-**-connect** required. Currently unused by the mapper; IEEE comes from `py/config.yaml`.
-
-**-ceReruns** re-run a counterexample several times (helps with wireless non-determinism).
-
-### Testing specific input sequences
+Render learned models to PDF using Graphviz:
 
 ```sh
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
-  -test experiments/tests/simple_hw_test.txt \
-  -times 5
-```
-
-Symbols in the file must appear in the alphabet. `simple_hw_test.txt` matches `association-nwkEntering.xml`.
-
-### Timing probe
-
-To search wait values that reduce time-related non-determinism (`-test` plus `-probeCmd`):
-
-```sh
-java -jar target/zigbee-fuzzer-1.0-SNAPSHOT.jar @experiments/args/zoh_args \
-  -test experiments/tests/simple_hw_test.txt \
-  -probeCmd responseWait,MAC_BEACON_REQUEST,MAC_ASSOCIATION_REQUEST,ZDO_NODE_DESCRIPTOR_REQUEST \
-  -times 7 \
-  -probeLow 0 \
-  -probeHigh 20000 \
-  -probeTol 25 \
-  -probeExport timing_alphabet.txt
+dot -Tpdf experiments/results/zoh/learnedModel.dot -o learnedModel.pdf
 ```
 
 ---
 
-## 7. If something fails
+## 7. Troubleshooting
 
-| Symptom | Likely cause |
-| --- | --- |
-| `mvn: command not found` | JDK/Maven not installed; venv does not provide `mvn` |
-| `mvn` uses Java 11/17 | Point `JAVA_HOME` at JDK 21 |
-| `No module named 'yaml'` | Recreate venv or `python -m pip install -r requirements.txt` |
-| `No module named 'jep'` (from **Java** / learning) | Native `libjep` not on the JVM path, or venv not the one Java embeds. `source scripts/setup_venv.sh` (it exports `PYTHONHOME` and `LD_LIBRARY_PATH`), then retry `java -jar`. |
-| `Jep is not supported in standalone Python` | Expected. Do not `import jep` from a Python shell. Run `java -jar` instead. |
-| `jep package not found` / no `libjep.so` | Jep never built into **this** Python. Activate venv (`which python` must end with `venv/bin/python`), set `JAVA_HOME` to a JDK, install `python3-dev g++`, then `python -m pip install --force-reinstall --no-cache-dir jep==4.3.2`. If `venv/` was created before that, `rm -rf venv` and `source scripts/setup_venv.sh`. |
-| `from ZigbeeSUL import ZigbeeSUL` fails | Not running from the repo root, or venv not active |
-| UnsatisfiedLinkError / jep | Native `libjep` not found: set `LD_LIBRARY_PATH` to `site-packages/jep` (see §2) |
-| Hang on ZOH connect | Nothing on port 6000, or `ZOH_ROOT` wrong |
-| `KeyError` / unimplemented symbol | Alphabet is not `association-nwkEntering.xml` |
-| Hardware opens the wrong tty | Pass `-adapter` (yaml `hardware_port` is not what Java opens) |
+| Symptom | Likely Cause | Solution |
+| --- | --- | --- |
+| `fatal error: ffi.h: No such file or directory` | Missing CFFI build header | Run `sudo apt install libffi-dev` and re-run `source scripts/setup_venv.sh`. |
+| `Failed to import encodings module` | `PYTHONHOME` set to venv prefix | Run `unset PYTHONHOME`. Ensure `setup_venv.sh` does not export `PYTHONHOME`. |
+| `No module named 'Cryptodome'` | Wrong package variant installed | Ensure `pycryptodomex` is listed in `requirements.txt` instead of `pycryptodome`. |
+| `jep package not found` / missing `libjep.so` | JEP failed compilation during pip install | Ensure `JAVA_HOME` points to JDK 21, install `python3-dev g++`, and run: `python -m pip install --force-reinstall --no-cache-dir jep==4.3.2`. |
+| `Jep is not supported in standalone Python` | Expected behavior | Do not run `import jep` directly in Python; JEP must be initialized through the JVM. |
+| `TimeoutError: Zigbee stack did not connect in time` | ZOH not connecting on TCP 6000 | Verify `ZOH_ROOT`, ensure `dist/dev/conf.json` specifies `"path": "tcp://127.0.0.1:6000"`, and check `.logs/dev-cli.log`. |
+| `npm ERR! Missing script: "dev:cli"` | Untracked upstream commit in ZOH | In the ZOH tree, run `git checkout fab65af` and rebuild with `npm run build`. |
+| `mvn: command not found` | Maven not installed or missing from `PATH` | Run `sudo apt install maven` or load the environment module. |
 
 ---
 
 ## Credits
 
-* `src/**` PSF wiring follows [protocol-fuzzing/ble-fuzzer](https://github.com/protocol-fuzzing/ble-fuzzer)
-* `scripts/diff_hyps.sh` is copied from [protocol-fuzzing/edhoc-fuzzer](https://github.com/protocol-fuzzing/edhoc-fuzzer)
+* State fuzzer integration follows [protocol-fuzzing/ble-fuzzer](https://github.com/protocol-fuzzing/ble-fuzzer).
+* Hypothesis comparison utilities adapted from [protocol-fuzzing/edhoc-fuzzer](https://github.com/protocol-fuzzing/edhoc-fuzzer).
